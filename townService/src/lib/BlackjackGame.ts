@@ -14,7 +14,7 @@ export enum BlackjackMove {
 /**
  * Class representing the current state of a blackjack game.
  */
-export default class BlackjackModel {
+export default class BlackjackGame {
   private _deck = new Array<Card>();
 
   // Index of player to move

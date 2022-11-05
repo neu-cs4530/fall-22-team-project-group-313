@@ -19,12 +19,71 @@ export default class BlackjackArea extends Interactable {
     this._labelText = this.scene.add.text(
       this.x - this.displayWidth / 2,
       this.y - this.displayHeight / 2,
-      `Press space to play a game of blackjack`,
+      `Press space to play a game of blackjack\n` + this.leaderboard(),
       { color: '#FFFFFF', backgroundColor: '#000000' },
     );
     this._labelText.setVisible(false);
     //this.townController.getBlackjackAreaController(this);
     this.setDepth(-1);
+  }
+
+  leaderboard(): string {
+    const currentLeaders = new Map([
+      ['1', 100],
+      ['2', 1000],
+      ['3', 50],
+      ['4', 75],
+    ]);
+
+    const historicalLeaders = new Map([
+      ['1', 100],
+      ['2', 1000],
+      ['3', 50],
+      ['4', 75],
+    ]);
+
+    let output = 'Current Blackjack Leaders:\n';
+
+    // Get blackjack controller
+    //this.townController.getBlackjackAreaController(this);
+
+    // Get the current leaders dictionary from blackjack controller
+
+    // Get the historical leaders dictionary from townController
+
+    // Sort leaders dictionary
+    const currentLeadersSorted = new Map([...currentLeaders.entries()].sort((a, b) => b[1] - a[1]));
+
+    if (!currentLeadersSorted) {
+      output += 'No players are currently playing in this area.';
+    }
+
+    // Iterate through dictionary
+    let i = 1;
+    for (const item of currentLeadersSorted) {
+      output += `${i}. Player ${item[0]} with ${item[1]} points\n`;
+      i++;
+    }
+
+    output += '\nHistorical Blackjack Leaders:\n';
+
+    // Sort leaders dictionary
+    const historicalLeadersSorted = new Map(
+      [...historicalLeaders.entries()].sort((a, b) => b[1] - a[1]),
+    );
+
+    if (!historicalLeadersSorted) {
+      output += 'No historical leaders in this town.';
+    }
+
+    // Iterate through dictionary
+    let j = 1;
+    for (const item of historicalLeadersSorted) {
+      output += `${j}. Player ${item[0]} with ${item[1]} points\n`;
+      j++;
+    }
+
+    return output.trim();
   }
 
   overlap(): void {

@@ -3,6 +3,9 @@ import {
   FormControl,
   FormLabel,
   Input,
+  Grid,
+  GridItem,
+  HStack,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -29,7 +32,7 @@ export default function SelectVideoModal({
 }): JSX.Element {
   const coveyTownController = useTownController();
   const viewingAreaController = useViewingAreaController(viewingArea?.name);
-
+  const [testText, setTestText] = useState<number>(0);
   const [video, setVideo] = useState<string>(viewingArea?.defaultVideoURL || '');
 
   useEffect(() => {
@@ -86,34 +89,58 @@ export default function SelectVideoModal({
       onClose={() => {
         closeModal();
         coveyTownController.unPause();
-      }}>
+      }}
+      size='6xl'>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Pick a video to watch in {viewingAreaController?.id} </ModalHeader>
+        <ModalHeader>BlackJackArea </ModalHeader>
         <ModalCloseButton />
-        <form
-          onSubmit={ev => {
-            ev.preventDefault();
-            createViewingArea();
-          }}>
-          <ModalBody pb={6}>
-            <FormControl>
-              <FormLabel htmlFor='video'>Video URL</FormLabel>
-              <Input
-                id='video'
-                name='video'
-                value={video}
-                onChange={e => setVideo(e.target.value)}
-              />
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme='blue' mr={3} onClick={createViewingArea}>
-              Set video
+        <ModalBody pb={6}>
+          <Grid h='200px' templateRows='repeat(6, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
+            <GridItem colStart={1} rowStart={2} rowSpan={1} colSpan={1}>
+              Player 1
+            </GridItem>
+            <GridItem rowStart={2} rowSpan={1} colSpan={1} bg='tomato'>
+              {/* <Card card={'2h'} height='46px' back /> */}
+            </GridItem>
+            <GridItem colStart={1} rowStart={3} rowSpan={1} colSpan={1}>
+              Player 2
+            </GridItem>
+            <GridItem rowStart={3} rowSpan={1} colSpan={1} bg='tomato' />
+            <GridItem colStart={1} rowStart={4} rowSpan={1} colSpan={1}>
+              Player 3
+            </GridItem>
+            <GridItem rowStart={4} rowSpan={1} colSpan={1} bg='tomato' />
+            <GridItem colStart={1} rowStart={5} rowSpan={1} colSpan={1}>
+              Player 4
+            </GridItem>
+            <GridItem rowStart={5} rowSpan={1} colSpan={1} bg='tomato' />
+            <GridItem colStart={1} rowStart={6} rowSpan={1} colSpan={1}>
+              Player 5
+            </GridItem>
+            <GridItem rowStart={6} rowSpan={1} colSpan={1} bg='tomato' />
+            <GridItem rowStart={3} colStart={9} rowSpan={1} colSpan={1}>
+              Dealer = 17
+            </GridItem>
+            <GridItem rowStart={4} colStart={8} rowSpan={1} colSpan={1} bg='tomato' />
+            <GridItem rowStart={4} colStart={9} rowSpan={1} colSpan={1} bg='tomato' />
+            <GridItem rowStart={4} colStart={10} rowSpan={1} colSpan={1} bg='tomato' />
+          </Grid>
+        </ModalBody>
+        <ModalFooter>
+          <HStack spacing={8}>
+            <Button
+              onClick={() => {
+                return setTestText(testText + 1);
+              }}>
+              Hit
             </Button>
-            <Button onClick={closeModal}>Cancel</Button>
-          </ModalFooter>
-        </form>
+            <Button>Stay</Button>
+            <Button>Split</Button>
+            <Button>Double</Button>
+            <Button>Surrender</Button>
+          </HStack>
+        </ModalFooter>
       </ModalContent>
     </Modal>
   );

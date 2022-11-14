@@ -50,6 +50,11 @@ export type ChatMessage = {
   dateCreated: Date;
 };
 
+export type GameAction = {
+  GameAction: string;
+  playerID: string;
+};
+
 export interface ConversationArea {
   id: string;
   topic?: string;
@@ -72,7 +77,7 @@ export interface ViewingArea {
 export interface BlackjackArea {
   id: string;
   occupantsByID: string[];
-  numDecks?: number;
+  gameAction?: GameAction;
 }
 
 export interface ServerToClientEvents {

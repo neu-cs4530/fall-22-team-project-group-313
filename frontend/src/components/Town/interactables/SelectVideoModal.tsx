@@ -1,5 +1,6 @@
 import {
   Button,
+  Text,
   Grid,
   GridItem,
   HStack,
@@ -18,7 +19,7 @@ import useTownController from '../../../hooks/useTownController';
 import { ViewingArea as ViewingAreaModel } from '../../../types/CoveyTownSocket';
 // eslint-disable-next-line prettier/prettier
 import ViewingArea from './ViewingArea';
-// import { PlayingCard, Suit } from '@alehuo/react-playing-cards';
+import { PlayingCard, Suit } from '@alehuo/react-playing-cards';
 
 export default function SelectVideoModal({
   isOpen,
@@ -82,19 +83,20 @@ export default function SelectVideoModal({
     }
   }, [video, coveyTownController, viewingAreaController, toast]);
 
-  // function card(value: number, suit: string) {
-  //   const style = { maxHeight: 0, maxWidth: 0 } as React.CSSProperties;
-  //   return <PlayingCard value={value} suit={suit as Suit} style={style} />;
-  //   return value + ' ' + suit;
-  // }
+  function printCard(value: number, suit: string) {
+    // const style = { height: '1px', width: '1px' } as React.CSSProperties;
+    // return <PlayingCard value={value} suit={suit as Suit} style={style} />;
+    const text = value + ' ' + suit;
+    return <Text> {text} </Text>;
+  }
 
   function playerRow(player: number, cards: { value: number; suit: string }[]) {
     return (
-      <HStack spacing={cards.length + 1}>
-        Player {player}
+      <HStack spacing={cards.length + 10}>
+        <Text> Player {player} </Text>
         {cards.map(item => {
-          // return card(item.value, item.suit);
-          return item.value;
+          return printCard(item.value, item.suit);
+          // return item.value;
         })}
       </HStack>
     );
@@ -114,8 +116,19 @@ export default function SelectVideoModal({
         <ModalCloseButton />
         <ModalBody pb={6}>
           <Grid h='200px' templateRows='repeat(6, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
-            <GridItem colStart={1} rowStart={2} rowSpan={7} colSpan={1}>
-              {playerRow(1, [{ value: 10, suit: 'clubs' }])}
+            <GridItem colStart={1} rowStart={2} rowSpan={7} colSpan={1} bg='tomato'>
+              {playerRow(1, [
+                { value: 9, suit: 'clubs' },
+                { value: 5, suit: 'clubs' },
+                { value: 7, suit: 'clubs' },
+              ])}
+            </GridItem>
+            <GridItem colStart={1} rowStart={3} rowSpan={7} colSpan={1} bg='blue'>
+              {playerRow(1, [
+                { value: 9, suit: 'hearts' },
+                { value: 5, suit: 'hearts' },
+                { value: 7, suit: 'hearts' },
+              ])}
             </GridItem>
             {/* <GridItem rowStart={2} rowSpan={1} colSpan={1}>
               {card(10, 'clubs')}

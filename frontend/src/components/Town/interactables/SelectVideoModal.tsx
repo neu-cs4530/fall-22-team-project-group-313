@@ -1,8 +1,5 @@
 import {
   Button,
-  FormControl,
-  FormLabel,
-  Input,
   Grid,
   GridItem,
   HStack,
@@ -19,7 +16,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useViewingAreaController } from '../../../classes/TownController';
 import useTownController from '../../../hooks/useTownController';
 import { ViewingArea as ViewingAreaModel } from '../../../types/CoveyTownSocket';
+// eslint-disable-next-line prettier/prettier
 import ViewingArea from './ViewingArea';
+// import { PlayingCard, Suit } from '@alehuo/react-playing-cards';
 
 export default function SelectVideoModal({
   isOpen,
@@ -83,6 +82,24 @@ export default function SelectVideoModal({
     }
   }, [video, coveyTownController, viewingAreaController, toast]);
 
+  // function card(value: number, suit: string) {
+  //   const style = { maxHeight: 0, maxWidth: 0 } as React.CSSProperties;
+  //   return <PlayingCard value={value} suit={suit as Suit} style={style} />;
+  //   return value + ' ' + suit;
+  // }
+
+  function playerRow(player: number, cards: { value: number; suit: string }[]) {
+    return (
+      <HStack spacing={cards.length + 1}>
+        Player {player}
+        {cards.map(item => {
+          // return card(item.value, item.suit);
+          return item.value;
+        })}
+      </HStack>
+    );
+  }
+
   return (
     <Modal
       isOpen={isOpen}
@@ -97,11 +114,11 @@ export default function SelectVideoModal({
         <ModalCloseButton />
         <ModalBody pb={6}>
           <Grid h='200px' templateRows='repeat(6, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
-            <GridItem colStart={1} rowStart={2} rowSpan={1} colSpan={1}>
-              Player 1
+            <GridItem colStart={1} rowStart={2} rowSpan={7} colSpan={1}>
+              {playerRow(1, [{ value: 10, suit: 'clubs' }])}
             </GridItem>
-            <GridItem rowStart={2} rowSpan={1} colSpan={1} bg='tomato'>
-              {/* <Card card={'2h'} height='46px' back /> */}
+            {/* <GridItem rowStart={2} rowSpan={1} colSpan={1}>
+              {card(10, 'clubs')}
             </GridItem>
             <GridItem colStart={1} rowStart={3} rowSpan={1} colSpan={1}>
               Player 2
@@ -121,7 +138,7 @@ export default function SelectVideoModal({
             <GridItem rowStart={6} rowSpan={1} colSpan={1} bg='tomato' />
             <GridItem rowStart={3} colStart={9} rowSpan={1} colSpan={1}>
               Dealer = 17
-            </GridItem>
+            </GridItem> */}
             <GridItem rowStart={4} colStart={8} rowSpan={1} colSpan={1} bg='tomato' />
             <GridItem rowStart={4} colStart={9} rowSpan={1} colSpan={1} bg='tomato' />
             <GridItem rowStart={4} colStart={10} rowSpan={1} colSpan={1} bg='tomato' />

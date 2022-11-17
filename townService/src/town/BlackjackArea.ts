@@ -85,6 +85,10 @@ export default class BlackjackArea extends InteractableArea {
       throw new Error(`Malformed viewing area ${name}`);
     }
     const rect: BoundingBox = { x: mapObject.x, y: mapObject.y, width, height };
-    return new BlackjackArea({ id: name, occupantsByID: [] }, rect, broadcastEmitter);
+    return new BlackjackArea(
+      { id: name, occupantsByID: [], gameAction: { GameAction: 'gameStart', playerID: '-1' } },
+      rect,
+      broadcastEmitter,
+    );
   }
 }

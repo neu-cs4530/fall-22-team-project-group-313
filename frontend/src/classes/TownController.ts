@@ -590,6 +590,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
         this._conversationAreas = [];
         this._viewingAreas = [];
         this._blackjackAreas = [];
+        console.log(initialData.interactables);
         initialData.interactables.forEach(eachInteractable => {
           if (isConversationArea(eachInteractable)) {
             this._conversationAreasInternal.push(
@@ -601,6 +602,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
           } else if (isViewingArea(eachInteractable)) {
             this._viewingAreas.push(new ViewingAreaController(eachInteractable));
           } else if (isBlackjackArea(eachInteractable)) {
+            console.log('\n\n HERE \n\n\n');
             this._blackjackAreasInternal.push(
               BlackjackAreaController.fromBlackjackModel(
                 eachInteractable,

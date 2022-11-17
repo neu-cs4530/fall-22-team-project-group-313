@@ -1,7 +1,6 @@
-import { Container, Modal, ModalBody } from '@chakra-ui/react';
-import React, { useEffect, useRef, useState } from 'react';
+// import { Container, Modal, ModalBody } from '@chakra-ui/react';
+import React, { useState } from 'react';
 import { useBlackjackAreaController, useInteractable } from '../../../classes/TownController';
-import BlackjackAreaController from '../../../classes/BlackjackAreaController';
 import useTownController from '../../../hooks/useTownController';
 import BlackjackAreaInteractable from './BlackjackArea';
 import BlackjackAreaModal from './BlackjackAreaModal';
@@ -17,12 +16,19 @@ export function BlackjackArea({
 }: {
   blackjackArea: BlackjackAreaInteractable;
 }): JSX.Element {
-  //   const townController = useTownController();
-  //   const blackjackAreaController = useBlackjackAreaController(blackjackArea.name);
-  //   const [selectIsOpen, setSelectIsOpen] = useState(viewingAreaController.video === undefined);
-  //   const [viewingAreaVideoURL, setViewingAreaVideoURL] = useState(viewingAreaController.video);
+  const townController = useTownController();
+  const blackjackAreaController = useBlackjackAreaController(blackjackArea.name);
+  const [selectIsOpen, setSelectIsOpen] = useState(
+    blackjackAreaController.gameAction?.GameAction === 'gameStart',
+  );
 
-  return <BlackjackAreaModal isOpen={true} close={() => {}} blackjackArea={blackjackArea} />;
+  return (
+    <BlackjackAreaModal
+      isOpen={selectIsOpen}
+      close={() => setSelectIsOpen(false)}
+      blackjackArea={blackjackArea}
+    />
+  );
 }
 
 /**

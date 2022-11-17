@@ -1,6 +1,5 @@
 import {
   Button,
-  Text,
   Grid,
   GridItem,
   HStack,
@@ -11,9 +10,11 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Text,
   useToast,
 } from '@chakra-ui/react';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useBlackjackAreaOccupants } from '../../../classes/BlackjackAreaController';
 import { useBlackjackAreaController } from '../../../classes/TownController';
 import useTownController from '../../../hooks/useTownController';
 import BlackjackArea from './BlackjackArea';
@@ -86,7 +87,7 @@ export default function BlackjackAreaModal({
     return <Text> {text} </Text>;
   }
 
-  function playerRow(player: number, cards: { value: number; suit: string }[], row: number) {
+  function playerRow(player: string, cards: { value: number; suit: string }[], row: number) {
     return (
       <GridItem colStart={1} rowStart={row} rowSpan={7} colSpan={1}>
         <HStack spacing={10}>
@@ -112,10 +113,10 @@ export default function BlackjackAreaModal({
     );
   }
 
-  function allHands(players: number[], hands: { value: number; suit: string }[][]) {
+  function allHands(players: string[], hands: { value: number; suit: string }[][]) {
     return (
       <Grid h='200px' templateRows='repeat(6, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
-        {players.map((player: number) => {
+        {players.map((player: string) => {
           {
             return playerRow(player, hands[players.indexOf(player)], players.indexOf(player) + 2);
           }
@@ -144,24 +145,10 @@ export default function BlackjackAreaModal({
         <ModalCloseButton />
         <ModalBody pb={6}>
           {allHands(
-            [1, 2, 3],
-            [
-              [
-                { value: 9, suit: 'clubs' },
-                { value: 5, suit: 'clubs' },
-                { value: 7, suit: 'clubs' },
-              ],
-              [
-                { value: 9, suit: 'hearts' },
-                { value: 5, suit: 'hearts' },
-                { value: 7, suit: 'hearts' },
-              ],
-              [
-                { value: 9, suit: 'spades' },
-                { value: 5, suit: 'spades' },
-                { value: 7, suit: 'spades' },
-              ],
-            ],
+            useBlackjackAreaOccupants(blackjackAreaController).map(player => {
+              return player.id;
+            }),
+            [],
           )}
           {/* <Grid h='200px' templateRows='repeat(6, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
               {playerRow(

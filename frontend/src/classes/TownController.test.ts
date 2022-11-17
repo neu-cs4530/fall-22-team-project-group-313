@@ -182,6 +182,27 @@ describe('TownController', () => {
         fail('Did not find an existing, empty conversation area in the town join response');
       }
     });
+    // it('Emits blackjackAreasChanged when a blackjack area is created', () => {
+    //   const newBlackjackArea = townJoinResponse.interactables.find(
+    //     eachInteractable => isBlackjackArea(eachInteractable) && !eachInteractable.gameAction,
+    //   ) as BlackjackModel;
+    //   if (newBlackjackArea) {
+    //     newBlackjackArea.gameAction = { GameAction: 'test', playerID: 'testID' };
+    //     newBlackjackArea.occupantsByID = [townJoinResponse.userID];
+    //     const event = emitEventAndExpectListenerFiring(
+    //       'interactableUpdate',
+    //       newBlackjackArea,
+    //       'blackjackAreasChanged',
+    //     );
+    //     const changedAreasArray = event.mock.calls[0][0];
+    //     expect(
+    //       changedAreasArray.find(eachBlackjackArea => eachBlackjackArea.id === newBlackjackArea.id)
+    //         ?.gameAction,
+    //     );
+    //   } else {
+    //     fail('Did not find an existing, empty blackjack area in the town join response');
+    //   }
+    // });
     describe('[T2] interactableUpdate events', () => {
       describe('Conversation Area updates', () => {
         function emptyConversationArea() {

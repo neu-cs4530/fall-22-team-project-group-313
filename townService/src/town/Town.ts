@@ -4,7 +4,7 @@ import { BroadcastOperator } from 'socket.io';
 import IVideoClient from '../lib/IVideoClient';
 import Player from '../lib/Player';
 import TwilioVideo from '../lib/TwilioVideo';
-import { isViewingArea } from '../TestUtils';
+import { isBlackjackArea, isViewingArea } from '../TestUtils';
 import {
   ChatMessage,
   ConversationArea as ConversationAreaModel,
@@ -14,7 +14,9 @@ import {
   ServerToClientEvents,
   SocketData,
   ViewingArea as ViewingAreaModel,
+  BlackjackArea as BlackjackModel,
 } from '../types/CoveyTownSocket';
+import BlackjackArea from './BlackjackArea';
 import ConversationArea from './ConversationArea';
 import InteractableArea from './InteractableArea';
 import ViewingArea from './ViewingArea';
@@ -140,11 +142,10 @@ export default class Town {
     });
 
     // Set up a listener to process updates to interactables.
-    // Currently only knows how to process updates for ViewingArea's, and
-    // ignores any other updates for any other kind of interactable.
-    // For ViewingArea's: dispatches an updateModel call to the viewingArea that
+    // Currently only knows how to process updates for ViewingArea's, and BlackjackArea's
+    // Dispatches an updateModel call to the area that
     // corresponds to the interactable being updated. Does not throw an error if
-    // the specified viewing area does not exist.
+    // the specified area does not exist.
     socket.on('interactableUpdate', (update: Interactable) => {
       if (isViewingArea(update)) {
         newPlayer.townEmitter.emit('interactableUpdate', update);
@@ -153,6 +154,14 @@ export default class Town {
         );
         if (viewingArea) {
           (viewingArea as ViewingArea).updateModel(update);
+        }
+      } else if (isBlackjackArea(update)) {
+        newPlayer.townEmitter.emit('interactableUpdate', update);
+        const blackjackArea = this._interactables.find(
+          eachInteractable => eachInteractable.id === update.id,
+        );
+        if (blackjackArea) {
+          (blackjackArea as BlackjackArea).updateModel(update);
         }
       }
     });
@@ -209,7 +218,7 @@ export default class Town {
   }
 
   /**
-   * Removes a player from a conversation area, updating the conversation area's occupants list,
+   * Removes a player from an interactable area, updating the interactable area's occupants list,
    * and emitting the appropriate message (area updated or area destroyed)
    *
    * @param player Player to remove from their current conversation area
@@ -248,6 +257,36 @@ export default class Town {
       return false;
     }
     area.topic = conversationArea.topic;
+    area.addPlayersWithinBounds(this._players);
+    this._broadcastEmitter.emit('interactableUpdate', area.toModel());
+    return true;
+  }
+
+  /**
+   * Creates a new blackjack area in this town if there is not currently an active
+   * blackjack with the same ID. The blackjack area ID must match the name of a
+   * blackjack area that exists in this town's map, and the blackjack area must not
+   * already have a gameAction set.
+   *
+   * If successful creating the blackjack area, this method:
+   *  Adds any players who are in the region defined by the blackjack area to it.
+   *  Notifies all players in the town that the blackjack area has been updated
+   *
+   * @param blackjackArea Information describing the blackjack area to create. Ignores any
+   *  occupantsById that are set on the blackjack area that is passed to this method.
+   *
+   * @returns true if the blackjack is successfully created, or false if there is no known
+   * blackjack area with the specified ID or if there is already an active blackjack area
+   * with the specified ID
+   */
+  public addBlackjackArea(blackjackArea: BlackjackModel): boolean {
+    const area = this._interactables.find(
+      eachArea => eachArea.id === blackjackArea.id,
+    ) as BlackjackArea;
+    if (!area || !blackjackArea.gameAction || area.gameAction) {
+      return false;
+    }
+    area.gameAction = blackjackArea.gameAction;
     area.addPlayersWithinBounds(this._players);
     this._broadcastEmitter.emit('interactableUpdate', area.toModel());
     return true;
@@ -352,7 +391,16 @@ export default class Town {
         ConversationArea.fromMapObject(eachConvAreaObj, this._broadcastEmitter),
       );
 
-    this._interactables = this._interactables.concat(viewingAreas).concat(conversationAreas);
+    const blackjackAreas = objectLayer.objects
+      .filter(eachObject => eachObject.type === 'BlackjackArea')
+      .map(eachBlackjackAreaObj =>
+        BlackjackArea.fromMapObject(eachBlackjackAreaObj, this._broadcastEmitter),
+      );
+
+    this._interactables = this._interactables
+      .concat(viewingAreas)
+      .concat(conversationAreas)
+      .concat(blackjackAreas);
     this._validateInteractables();
   }
 

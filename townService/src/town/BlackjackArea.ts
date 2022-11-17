@@ -50,6 +50,15 @@ export default class BlackjackArea extends InteractableArea {
   }
 
   /**
+   * Updates the state of this BlackjackArea, setting the gameAction properties
+   *
+   * @param blackjackArea updated model
+   */
+  public updateModel({ gameAction }: BlackjackModel) {
+    this.gameAction = gameAction;
+  }
+
+  /**
    * Convert this BlackjackArea instance to a simple BlackjackModel suitable for
    * transporting over a socket to a client.
    */

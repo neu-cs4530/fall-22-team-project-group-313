@@ -803,8 +803,9 @@ export function useBlackjackAreaController(blackjackAreaID: string): BlackjackAr
   const blackjackArea = townController.blackjackAreas.find(
     eachArea => eachArea.id == blackjackAreaID,
   );
+
   if (!blackjackArea) {
-    throw new Error(`Requested viewing area ${blackjackAreaID} does not exist`);
+    throw new Error(`Requested blackjack area ${blackjackAreaID} does not exist`);
   }
   return blackjackArea;
 }

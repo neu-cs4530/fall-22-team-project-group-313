@@ -5,6 +5,7 @@ import useTownController from '../../hooks/useTownController';
 import SocialSidebar from '../SocialSidebar/SocialSidebar';
 import NewConversationModal from './interactables/NewCoversationModal';
 import TownGameScene from './TownGameScene';
+import BlackjackAreaWrapper from './interactables/BlackjackAreaGame';
 
 export default function TownMap(): JSX.Element {
   const coveyTownController = useTownController();
@@ -48,6 +49,7 @@ export default function TownMap(): JSX.Element {
   return (
     <div id='app-container'>
       <NewConversationModal />
+      <BlackjackAreaWrapper />
       <div id='map-container' />
       <div id='social-container'>
         <SocialSidebar />

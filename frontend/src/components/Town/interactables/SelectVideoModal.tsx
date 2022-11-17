@@ -86,19 +86,50 @@ export default function SelectVideoModal({
   function printCard(value: number, suit: string) {
     // const style = { height: '1px', width: '1px' } as React.CSSProperties;
     // return <PlayingCard value={value} suit={suit as Suit} style={style} />;
-    const text = value + ' ' + suit;
+    const text = value + suit;
     return <Text> {text} </Text>;
   }
 
-  function playerRow(player: number, cards: { value: number; suit: string }[]) {
+  function playerRow(player: number, cards: { value: number; suit: string }[], row: number) {
     return (
-      <HStack spacing={cards.length + 10}>
-        <Text> Player {player} </Text>
-        {cards.map(item => {
-          return printCard(item.value, item.suit);
-          // return item.value;
+      <GridItem colStart={1} rowStart={row} rowSpan={7} colSpan={1}>
+        <HStack spacing={10}>
+          <Text> Player{player} </Text>
+          {cards.map(card => {
+            return printCard(card.value, card.suit);
+          })}
+        </HStack>
+      </GridItem>
+    );
+  }
+
+  function dealer(cards: { value: number; suit: string }[]) {
+    return (
+      <GridItem colStart={8} rowStart={4} rowSpan={1} colSpan={1}>
+        <HStack spacing={10}>
+          <Text> Dealer </Text>
+          {cards.map(card => {
+            return printCard(card.value, card.suit);
+          })}
+        </HStack>
+      </GridItem>
+    );
+  }
+
+  function allHands(players: number[], hands: { value: number; suit: string }[][]) {
+    return (
+      <Grid h='200px' templateRows='repeat(6, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
+        {players.map((player: number) => {
+          {
+            return playerRow(player, hands[players.indexOf(player)], players.indexOf(player) + 2);
+          }
         })}
-      </HStack>
+        {dealer([
+          { value: 9, suit: 'clubs' },
+          { value: 5, suit: 'clubs' },
+          { value: 7, suit: 'clubs' },
+        ])}
+      </Grid>
     );
   }
 
@@ -115,47 +146,49 @@ export default function SelectVideoModal({
         <ModalHeader>BlackJackArea </ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={6}>
-          <Grid h='200px' templateRows='repeat(6, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
-            <GridItem colStart={1} rowStart={2} rowSpan={7} colSpan={1} bg='tomato'>
-              {playerRow(1, [
+          {allHands(
+            [1, 2, 3],
+            [
+              [
                 { value: 9, suit: 'clubs' },
                 { value: 5, suit: 'clubs' },
                 { value: 7, suit: 'clubs' },
-              ])}
-            </GridItem>
-            <GridItem colStart={1} rowStart={3} rowSpan={7} colSpan={1} bg='blue'>
-              {playerRow(1, [
+              ],
+              [
                 { value: 9, suit: 'hearts' },
                 { value: 5, suit: 'hearts' },
                 { value: 7, suit: 'hearts' },
-              ])}
-            </GridItem>
-            {/* <GridItem rowStart={2} rowSpan={1} colSpan={1}>
-              {card(10, 'clubs')}
-            </GridItem>
-            <GridItem colStart={1} rowStart={3} rowSpan={1} colSpan={1}>
-              Player 2
-            </GridItem>
-            <GridItem rowStart={3} rowSpan={1} colSpan={1} bg='tomato' />
-            <GridItem colStart={1} rowStart={4} rowSpan={1} colSpan={1}>
-              Player 3
-            </GridItem>
-            <GridItem rowStart={4} rowSpan={1} colSpan={1} bg='tomato' />
-            <GridItem colStart={1} rowStart={5} rowSpan={1} colSpan={1}>
-              Player 4
-            </GridItem>
-            <GridItem rowStart={5} rowSpan={1} colSpan={1} bg='tomato' />
-            <GridItem colStart={1} rowStart={6} rowSpan={1} colSpan={1}>
-              Player 5
-            </GridItem>
-            <GridItem rowStart={6} rowSpan={1} colSpan={1} bg='tomato' />
-            <GridItem rowStart={3} colStart={9} rowSpan={1} colSpan={1}>
-              Dealer = 17
-            </GridItem> */}
+              ],
+              [
+                { value: 9, suit: 'spades' },
+                { value: 5, suit: 'spades' },
+                { value: 7, suit: 'spades' },
+              ],
+            ],
+          )}
+          {/* <Grid h='200px' templateRows='repeat(6, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
+            {playerRow(
+              1,
+              [
+                { value: 9, suit: 'clubs' },
+                { value: 5, suit: 'clubs' },
+                { value: 7, suit: 'clubs' },
+              ],
+              2,
+            )}
+            {playerRow(
+              2,
+              [
+                { value: 9, suit: 'clubs' },
+                { value: 5, suit: 'clubs' },
+                { value: 7, suit: 'clubs' },
+              ],
+              3,
+            )}
             <GridItem rowStart={4} colStart={8} rowSpan={1} colSpan={1} bg='tomato' />
             <GridItem rowStart={4} colStart={9} rowSpan={1} colSpan={1} bg='tomato' />
             <GridItem rowStart={4} colStart={10} rowSpan={1} colSpan={1} bg='tomato' />
-          </Grid>
+          </Grid>  */}
         </ModalBody>
         <ModalFooter>
           <HStack spacing={8}>

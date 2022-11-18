@@ -63,6 +63,8 @@
   width: 400px;
 }
 
+/* https://codepen.io/ursooperduper/pen/EXWxdW */
+
 #root {
   display: flex;
   flex-flow: column wrap;
@@ -75,8 +77,8 @@
 
 .card {
   display: flex;
-  width: 48px;
-  height: 80px;
+  width: 30px;
+  height: 50px;
   background-color: #fff;
   border-radius: 8px;
   border: 1px solid black;
@@ -93,11 +95,11 @@
 }
 
 .card-value {
-  font-size: 16px;
+  font-size: 8px;
 }
 
 .card-suit {
-  font-size: 8px;
+  font-size: 4px;
 }
 
 .card-tl {
@@ -113,14 +115,4 @@
   flex-flow: column nowrap;
   justify-content: flex-start;
   transform: rotate(-180deg);
-}
-
-input[type='button'] {
-  padding: 8px 16px;
-  margin: 16px;
-  border-radius: 8px;
-  background-color: red;
-  border: 1px solid white;
-  color: white;
-  text-transform: uppercase;
 }

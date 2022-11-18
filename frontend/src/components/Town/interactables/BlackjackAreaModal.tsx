@@ -14,7 +14,7 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useBlackjackAreaOccupants } from '../../../classes/BlackjackAreaController';
+// import { useBlackjackAreaOccupants } from '../../../classes/BlackjackAreaController';
 import { useBlackjackAreaController } from '../../../classes/TownController';
 import useTownController from '../../../hooks/useTownController';
 import BlackjackArea from './BlackjackArea';
@@ -148,7 +148,7 @@ export default function BlackjackAreaModal({
 
   function dealer(cards: { value: string; suit: string }[]) {
     return (
-      <GridItem colStart={8} rowStart={4} rowSpan={1} colSpan={1}>
+      <GridItem colStart={9} rowStart={4} rowSpan={1} colSpan={1}>
         <HStack spacing={10}>
           <Text> Dealer </Text>
           {cards.map(card => {
@@ -190,28 +190,28 @@ export default function BlackjackAreaModal({
         <ModalCloseButton />
         <ModalBody pb={6}>
           {allHands(
-            useBlackjackAreaOccupants(blackjackAreaController).map(player => {
-              return player.id;
-            }),
-            // ['1', '2', '3'],
-            [],
-            // [
-            //   [
-            //     { value: 'Q', suit: 'diamond' },
-            //     { value: 'A', suit: 'heart' },
-            //     { value: '2', suit: 'spade' },
-            //   ],
-            //   [
-            //     { value: '10', suit: 'diamond' },
-            //     { value: '3', suit: 'heart' },
-            //     { value: '4', suit: 'diamond' },
-            //   ],
-            //   [
-            //     { value: '4', suit: 'clubs' },
-            //     { value: '8', suit: 'clubs' },
-            //     { value: '6', suit: 'spade' },
-            //   ],
-            // ],
+            // useBlackjackAreaOccupants(blackjackAreaController).map(player => {
+            //   return player.id;
+            // }),
+            ['1', '2', '3'],
+            // [],
+            [
+              [
+                { value: 'Q', suit: 'diamond' },
+                { value: 'A', suit: 'heart' },
+                { value: '2', suit: 'spade' },
+              ],
+              [
+                { value: '10', suit: 'diamond' },
+                { value: '3', suit: 'heart' },
+                { value: '4', suit: 'diamond' },
+              ],
+              [
+                { value: '4', suit: 'clubs' },
+                { value: '8', suit: 'clubs' },
+                { value: '6', suit: 'spade' },
+              ],
+            ],
           )}
         </ModalBody>
         <ModalFooter>

@@ -134,6 +134,12 @@ export default function BlackjackAreaModal({
   }
 
   function playerRow(player: string, cards: { value: string; suit: string }[], row: number) {
+    let totalValue = 0;
+
+    for (const card of cards) {
+      const val = +card.value;
+      totalValue += val;
+    }
     return (
       <GridItem colStart={1} rowStart={row} rowSpan={7} colSpan={1}>
         <HStack spacing={10}>
@@ -141,19 +147,27 @@ export default function BlackjackAreaModal({
           {cards.map(card => {
             return printCard(card.value, card.suit);
           })}
+          <Text> {totalValue} </Text>
         </HStack>
       </GridItem>
     );
   }
 
   function dealer(cards: { value: string; suit: string }[]) {
+    let totalValue = 0;
+
+    for (const card of cards) {
+      const val = +card.value;
+      totalValue += val;
+    }
     return (
-      <GridItem colStart={9} rowStart={4} rowSpan={2} colSpan={1}>
+      <GridItem colStart={7} rowStart={9} rowSpan={2} colSpan={1}>
         <HStack spacing={10}>
           <Text> Dealer </Text>
           {cards.map(card => {
             return printCard(card.value, card.suit);
           })}
+          <Text> {totalValue} </Text>
         </HStack>
       </GridItem>
     );
@@ -198,7 +212,7 @@ export default function BlackjackAreaModal({
             //   return player.id;
             // }),
             ['1', '2', '3', '4', '5'],
-            // [],
+            // [[], [], [], [], []],
             [
               [
                 { value: 'Q', suit: 'diamond' },

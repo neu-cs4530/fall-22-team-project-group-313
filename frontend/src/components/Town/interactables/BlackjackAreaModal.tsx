@@ -148,7 +148,7 @@ export default function BlackjackAreaModal({
 
   function dealer(cards: { value: string; suit: string }[]) {
     return (
-      <GridItem colStart={9} rowStart={4} rowSpan={1} colSpan={1}>
+      <GridItem colStart={9} rowStart={4} rowSpan={2} colSpan={1}>
         <HStack spacing={10}>
           <Text> Dealer </Text>
           {cards.map(card => {
@@ -161,10 +161,14 @@ export default function BlackjackAreaModal({
 
   function allHands(players: string[], hands: { value: string; suit: string }[][]) {
     return (
-      <Grid h='200px' templateRows='repeat(6, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
+      <Grid h='200px' templateRows='repeat(25, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
         {players.map((player: string) => {
           {
-            return playerRow(player, hands[players.indexOf(player)], players.indexOf(player) + 2);
+            return playerRow(
+              player,
+              hands[players.indexOf(player)],
+              players.indexOf(player) * 4 + 2,
+            );
           }
         })}
         {dealer([
@@ -183,7 +187,7 @@ export default function BlackjackAreaModal({
         closeModal();
         coveyTownController.unPause();
       }}
-      size='6xl'>
+      size='full'>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>BlackJackArea </ModalHeader>
@@ -193,7 +197,7 @@ export default function BlackjackAreaModal({
             // useBlackjackAreaOccupants(blackjackAreaController).map(player => {
             //   return player.id;
             // }),
-            ['1', '2', '3'],
+            ['1', '2', '3', '4', '5'],
             // [],
             [
               [
@@ -205,6 +209,16 @@ export default function BlackjackAreaModal({
                 { value: '10', suit: 'diamond' },
                 { value: '3', suit: 'heart' },
                 { value: '4', suit: 'diamond' },
+              ],
+              [
+                { value: '4', suit: 'clubs' },
+                { value: '8', suit: 'clubs' },
+                { value: '6', suit: 'spade' },
+              ],
+              [
+                { value: '4', suit: 'clubs' },
+                { value: '8', suit: 'clubs' },
+                { value: '6', suit: 'spade' },
               ],
               [
                 { value: '4', suit: 'clubs' },

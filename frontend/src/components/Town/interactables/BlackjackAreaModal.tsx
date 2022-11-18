@@ -80,14 +80,60 @@ export default function BlackjackAreaModal({
   //     }
   //   }, [video, coveyTownController, viewingAreaController, toast]);
 
-  function printCard(value: number, suit: string) {
-    // const style = { height: '1px', width: '1px' } as React.CSSProperties;
-    // return <PlayingCard value={value} suit={suit as Suit} style={style} />;
-    const text = value + suit;
-    return <Text> {text} </Text>;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  const Card = (props: { suit: string; value: string }) => {
+    let suitConversion;
+
+    switch (props.suit) {
+      case 'clubs':
+        suitConversion = '♣︎';
+        break;
+      case 'heart':
+        suitConversion = '♥︎';
+        break;
+      case 'diamond':
+        suitConversion = '♦︎';
+        break;
+      case 'spade':
+        suitConversion = '♠︎';
+        break;
+      default:
+    }
+
+    if (suitConversion == '♣︎' || suitConversion == '♠︎') {
+      return (
+        <div className='card card-black'>
+          <div className='card-tl'>
+            <div className='card-value'>{props.value}</div>
+            <div className='card-suit'>{suitConversion}</div>
+          </div>
+          <div className='card-br'>
+            <div className='card-value'>{props.value}</div>
+            <div className='card-suit'>{suitConversion}</div>
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className='card card-red'>
+          <div className='card-tl'>
+            <div className='card-value'>{props.value}</div>
+            <div className='card-suit'>{suitConversion}</div>
+          </div>
+          <div className='card-br'>
+            <div className='card-value'>{props.value}</div>
+            <div className='card-suit'>{suitConversion}</div>
+          </div>
+        </div>
+      );
+    }
+  };
+
+  function printCard(value: string, suit: string) {
+    return <Card suit={suit} value={value} />;
   }
 
-  function playerRow(player: string, cards: { value: number; suit: string }[], row: number) {
+  function playerRow(player: string, cards: { value: string; suit: string }[], row: number) {
     return (
       <GridItem colStart={1} rowStart={row} rowSpan={7} colSpan={1}>
         <HStack spacing={10}>
@@ -100,7 +146,7 @@ export default function BlackjackAreaModal({
     );
   }
 
-  function dealer(cards: { value: number; suit: string }[]) {
+  function dealer(cards: { value: string; suit: string }[]) {
     return (
       <GridItem colStart={8} rowStart={4} rowSpan={1} colSpan={1}>
         <HStack spacing={10}>
@@ -113,7 +159,7 @@ export default function BlackjackAreaModal({
     );
   }
 
-  function allHands(players: string[], hands: { value: number; suit: string }[][]) {
+  function allHands(players: string[], hands: { value: string; suit: string }[][]) {
     return (
       <Grid h='200px' templateRows='repeat(6, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
         {players.map((player: string) => {
@@ -122,15 +168,14 @@ export default function BlackjackAreaModal({
           }
         })}
         {dealer([
-          { value: 9, suit: 'clubs' },
-          { value: 5, suit: 'clubs' },
-          { value: 7, suit: 'clubs' },
+          { value: '9', suit: 'clubs' },
+          { value: '5', suit: 'clubs' },
+          { value: '7', suit: 'clubs' },
         ])}
       </Grid>
     );
   }
 
-  console.log('hey man');
   return (
     <Modal
       isOpen={isOpen}
@@ -148,31 +193,26 @@ export default function BlackjackAreaModal({
             useBlackjackAreaOccupants(blackjackAreaController).map(player => {
               return player.id;
             }),
+            // ['1', '2', '3'],
             [],
+            // [
+            //   [
+            //     { value: 'Q', suit: 'diamond' },
+            //     { value: 'A', suit: 'heart' },
+            //     { value: '2', suit: 'spade' },
+            //   ],
+            //   [
+            //     { value: '10', suit: 'diamond' },
+            //     { value: '3', suit: 'heart' },
+            //     { value: '4', suit: 'diamond' },
+            //   ],
+            //   [
+            //     { value: '4', suit: 'clubs' },
+            //     { value: '8', suit: 'clubs' },
+            //     { value: '6', suit: 'spade' },
+            //   ],
+            // ],
           )}
-          {/* <Grid h='200px' templateRows='repeat(6, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
-              {playerRow(
-                1,
-                [
-                  { value: 9, suit: 'clubs' },
-                  { value: 5, suit: 'clubs' },
-                  { value: 7, suit: 'clubs' },
-                ],
-                2,
-              )}
-              {playerRow(
-                2,
-                [
-                  { value: 9, suit: 'clubs' },
-                  { value: 5, suit: 'clubs' },
-                  { value: 7, suit: 'clubs' },
-                ],
-                3,
-              )}
-              <GridItem rowStart={4} colStart={8} rowSpan={1} colSpan={1} bg='tomato' />
-              <GridItem rowStart={4} colStart={9} rowSpan={1} colSpan={1} bg='tomato' />
-              <GridItem rowStart={4} colStart={10} rowSpan={1} colSpan={1} bg='tomato' />
-            </Grid>  */}
         </ModalBody>
         <ModalFooter>
           <HStack spacing={8}>

@@ -10,6 +10,11 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
   Text,
   useToast,
 } from '@chakra-ui/react';
@@ -30,6 +35,7 @@ export default function BlackjackAreaModal({
 }): JSX.Element {
   const coveyTownController = useTownController();
   const blackjackAreaController = useBlackjackAreaController(blackjackArea?.name);
+  const [sliderValue, setSliderValue] = React.useState(5);
   const [testText, setTestText] = useState<number>(0);
 
   useEffect(() => {
@@ -195,12 +201,40 @@ export default function BlackjackAreaModal({
     );
   }
 
+  function outputWager(minPoints: number, maxPoints: number) {
+    return (
+      <HStack>
+        <Text>Wager:</Text>
+        <NumberInput defaultValue={minPoints} min={minPoints} max={maxPoints}>
+          <NumberInputField />
+          <NumberInputStepper>
+            <NumberIncrementStepper />
+            <NumberDecrementStepper />
+          </NumberInputStepper>
+        </NumberInput>
+        <Button>Submit</Button>
+      </HStack>
+    );
+  }
+
+  function wager(points: number) {
+    if (points <= 25) return outputWager(1, points);
+    else return outputWager(Math.trunc(points * 0.05), Math.trunc(points * 0.25));
+  }
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={() => {
         closeModal();
+        const occupants = blackjackAreaController.occupants;
+        blackjackAreaController.occupants = occupants.filter(
+          player => player.id !== coveyTownController.ourPlayer.id,
+        );
+        coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
         coveyTownController.unPause();
+        console.log(blackjackAreaController);
+        console.log(coveyTownController);
       }}
       size='full'>
       <ModalOverlay />
@@ -225,11 +259,11 @@ export default function BlackjackAreaModal({
                 { value: '3', suit: 'heart' },
                 { value: '4', suit: 'diamond' },
               ],
-              [
-                { value: '4', suit: 'clubs' },
-                { value: '8', suit: 'clubs' },
-                { value: '6', suit: 'spade' },
-              ],
+              // [
+              //   { value: '4', suit: 'clubs' },
+              //   { value: '8', suit: 'clubs' },
+              //   { value: '6', suit: 'spade' },
+              // ],
               // [
               //   { value: '4', suit: 'clubs' },
               //   { value: '8', suit: 'clubs' },
@@ -245,6 +279,7 @@ export default function BlackjackAreaModal({
         </ModalBody>
         <ModalFooter justifyContent={'space-between'}>
           <Text className='pull-left'>{coveyTownController.ourPlayer.userName}</Text>
+          {wager(25)}
           <HStack spacing={8}>
             <Button>
               {/* // onClick={() => {

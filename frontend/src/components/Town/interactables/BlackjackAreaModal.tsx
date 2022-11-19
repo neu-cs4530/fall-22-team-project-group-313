@@ -1,3 +1,4 @@
+/* eslint-disable react/no-children-prop */
 import {
   Button,
   Grid,
@@ -10,11 +11,12 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
   NumberInput,
   NumberInputField,
-  NumberInputStepper,
+  Slider,
+  SliderFilledTrack,
+  SliderThumb,
+  SliderTrack,
   Text,
   useToast,
 } from '@chakra-ui/react';
@@ -35,7 +37,7 @@ export default function BlackjackAreaModal({
 }): JSX.Element {
   const coveyTownController = useTownController();
   const blackjackAreaController = useBlackjackAreaController(blackjackArea?.name);
-  const [sliderValue, setSliderValue] = React.useState(5);
+  const [wagerValue, setWagerValue] = React.useState(5);
   const [testText, setTestText] = useState<number>(0);
 
   useEffect(() => {
@@ -205,13 +207,29 @@ export default function BlackjackAreaModal({
     return (
       <HStack>
         <Text>Wager:</Text>
-        <NumberInput defaultValue={minPoints} min={minPoints} max={maxPoints}>
+        {/* <Flex> */}
+        <NumberInput
+          defaultValue={minPoints}
+          min={minPoints}
+          max={maxPoints}
+          maxW='100%'
+          mr='2rem'
+          value={wagerValue}
+          onChange={(value: string) => setWagerValue((value as unknown) as number)}>
           <NumberInputField />
-          <NumberInputStepper>
-            <NumberIncrementStepper />
-            <NumberDecrementStepper />
-          </NumberInputStepper>
         </NumberInput>
+        <Slider
+          focusThumbOnChange={false}
+          min={minPoints}
+          max={maxPoints}
+          value={wagerValue}
+          onChange={(value: number) => setWagerValue(value)}>
+          <SliderTrack>
+            <SliderFilledTrack />
+          </SliderTrack>
+          <SliderThumb fontSize='sm' boxSize='30px' opacity='90%' children={wagerValue} />
+        </Slider>
+        {/* </Flex> */}
         <Button>Submit</Button>
       </HStack>
     );
@@ -280,7 +298,7 @@ export default function BlackjackAreaModal({
         <ModalFooter justifyContent={'space-between'}>
           <Text className='pull-left'>{coveyTownController.ourPlayer.userName}</Text>
           {wager(25)}
-          <HStack spacing={8}>
+          <HStack spacing={25}>
             <Button>
               {/* // onClick={() => {
               //   ;

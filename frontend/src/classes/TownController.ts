@@ -11,6 +11,7 @@ import { LoginController } from '../contexts/LoginControllerContext';
 import { TownsService, TownsServiceClient } from '../generated/client';
 import useTownController from '../hooks/useTownController';
 import {
+  Card,
   ChatMessage,
   CoveyTownSocket,
   GameAction,
@@ -658,7 +659,12 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     if (existingController) {
       return existingController;
     } else {
-      const newController = new BlackjackAreaController(blackjackArea.name);
+      const newController = new BlackjackAreaController(blackjackArea.name, {
+        hands: new Map<string, Card[][]>(),
+        playerPoints: new Map<string, number>(),
+        playerBets: new Map<string, number[]>(),
+        playerMoveIndex: 0,
+      });
       this._blackjackAreasInternal.push(newController);
       return newController;
     }

@@ -2,7 +2,12 @@ import EventEmitter from 'events';
 import _ from 'lodash';
 import { useEffect, useState } from 'react';
 import TypedEmitter from 'typed-emitter';
-import { BlackjackArea as BlackjackModel, GameAction } from '../types/CoveyTownSocket';
+import {
+  BlackjackArea as BlackjackModel,
+  BlackjackGame as BlackjackGameModel,
+  Card,
+  GameAction,
+} from '../types/CoveyTownSocket';
 import PlayerController from './PlayerController';
 
 /**
@@ -12,6 +17,8 @@ import PlayerController from './PlayerController';
 export type BlackjackAreaEvents = {
   gameActionChange: (newAction: GameAction | undefined) => void;
   occupantsChange: (newOccupants: PlayerController[]) => void;
+  handsChange: (newHands: Map<string, Card[][]>) => void;
+  pointsChange: (newPoints: Map<string, number>) => void;
 };
 
 /**
@@ -24,6 +31,8 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
 
   private _id: string;
 
+  private _game: BlackjackGameModel;
+
   private _gameAction?: GameAction;
 
   /**
@@ -31,9 +40,10 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
    * @param id
    * @param gameAction
    */
-  constructor(id: string, gameAction?: GameAction) {
+  constructor(id: string, game: BlackjackGameModel, gameAction?: GameAction) {
     super();
     this._id = id;
+    this._game = game;
     this._gameAction = gameAction;
   }
 
@@ -81,6 +91,10 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
     return this._gameAction;
   }
 
+  get game(): BlackjackGameModel {
+    return this._game;
+  }
+
   /**
    * A blackjack area is empty if there are no occupants in it.
    */
@@ -95,6 +109,7 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
   toBlackjackModel(): BlackjackModel {
     return {
       id: this.id,
+      game: this._game,
       occupantsByID: this.occupants.map(player => player.id),
       gameAction: this.gameAction,
     };
@@ -110,7 +125,11 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
     blackjackModel: BlackjackModel,
     playerFinder: (playerIDs: string[]) => PlayerController[],
   ): BlackjackAreaController {
-    const ret = new BlackjackAreaController(blackjackModel.id, blackjackModel.gameAction);
+    const ret = new BlackjackAreaController(
+      blackjackModel.id,
+      blackjackModel.game,
+      blackjackModel.gameAction,
+    );
     ret.occupants = playerFinder(blackjackModel.occupantsByID);
     return ret;
   }
@@ -147,4 +166,36 @@ export function useBlackjackAreaGameAction(area: BlackjackAreaController): GameA
     };
   }, [area]);
   return gameAction;
+}
+
+/**
+ * A react hook to retrieve the hands of a BlackjackAreaController, returning an array of PlayerController.
+ *
+ * This hook will re-render any components that use it when the set of occupants changes.
+ */
+export function useAllHands(area: BlackjackAreaController): Map<string, Card[][]> {
+  const [allHands, setAllHands] = useState(area.game.hands);
+  useEffect(() => {
+    area.addListener('handsChange', setAllHands);
+    return () => {
+      area.removeListener('handsChange', setAllHands);
+    };
+  }, [area]);
+  return allHands;
+}
+
+/**
+ * A react hook to retrieve the player points of a BlackjackAreaController, returning an array of PlayerController.
+ *
+ * This hook will re-render any components that use it when the set of occupants changes.
+ */
+export function usePlayerPoints(area: BlackjackAreaController): Map<string, number> {
+  const [playerPoints, setPlayerPoints] = useState(area.game.playerPoints);
+  useEffect(() => {
+    area.addListener('pointsChange', setPlayerPoints);
+    return () => {
+      area.removeListener('pointsChange', setPlayerPoints);
+    };
+  }, [area]);
+  return playerPoints;
 }

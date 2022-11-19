@@ -1,9 +1,11 @@
-export enum Suit {
-  S = 'S',
-  H = 'H',
-  D = 'D',
-  C = 'C',
-}
+// export enum Suit {
+//   S = 'S',
+//   H = 'H',
+//   D = 'D',
+//   C = 'C',
+// }
+
+import { Suit } from 'src/types/CoveyTownSocket';
 
 // export enum Rank {
 //   Ace = 1,

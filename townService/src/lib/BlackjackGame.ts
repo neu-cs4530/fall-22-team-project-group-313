@@ -1,5 +1,6 @@
 import { cloneDeep } from 'lodash';
 import Card from './Card';
+import { BlackjackGame as BlackjackGameModel } from '../types/CoveyTownSocket';
 
 /**
  * Represents all of the possible moves a blackjack player can make
@@ -25,13 +26,13 @@ export default class BlackjackGame {
   private _dealerHand = new Array<Card>();
 
   // Players' hands
-  private _hands: Map<string, Card[][]>;
+  public hands: Map<string, Card[][]>;
 
   // index of the hand the player is working with (0 unless player splits)
   private _currentHandIndex: Map<string, number>;
 
   // Bets players have on each hand
-  private _playerBets: Map<string, number[]>;
+  public playerBets: Map<string, number[]>;
 
   // Player balances
   public playerPoints: Map<string, number>;
@@ -51,9 +52,9 @@ export default class BlackjackGame {
     this.players = playerIDs;
     this.playerMoveIndex = 0;
     this._numDecks = numDecks ?? 6;
-    this._hands = new Map<string, Card[][]>();
+    this.hands = new Map<string, Card[][]>();
     this._currentHandIndex = new Map<string, number>();
-    this._playerBets = new Map<string, number[]>();
+    this.playerBets = new Map<string, number[]>();
     this._handsAwaitingBet = new Map<string, number | undefined>();
     this.playerPoints = new Map<string, number>();
     this._newPlayers = [];
@@ -84,7 +85,7 @@ export default class BlackjackGame {
   private _deal(): void {
     for (let i = 0; i < 2; i++) {
       this.players.forEach(id => {
-        const hands = this._hands.get(id) as Card[][];
+        const hands = this.hands.get(id) as Card[][];
         const hand = hands[0];
         hand.push(this._deck.pop() as Card);
       });
@@ -104,9 +105,9 @@ export default class BlackjackGame {
     this._newPlayers = [];
     this.players.forEach(id => {
       this.playerPoints.set(id, 0);
-      this._hands.set(id, [[]]);
+      this.hands.set(id, [[]]);
       this._currentHandIndex.set(id, 0);
-      this._playerBets.set(id, []); // To be updated later
+      this.playerBets.set(id, []); // To be updated later
       this._handsAwaitingBet.set(id, 0);
     });
     this._deal();
@@ -134,7 +135,7 @@ export default class BlackjackGame {
     }
     let turnOver = false;
     let currentHandIndex = this._currentHandIndex.get(playerID) as number;
-    const playerHands = this._hands.get(playerID) as Card[][];
+    const playerHands = this.hands.get(playerID) as Card[][];
     switch (move) {
       case BlackjackMove.Hit: {
         const nextCard = this._deck.pop() as Card;
@@ -143,7 +144,7 @@ export default class BlackjackGame {
         if (currentVal >= 21) {
           currentHandIndex += 1;
           this._currentHandIndex.set(playerID, currentHandIndex);
-          turnOver = currentHandIndex === this._hands.get(playerID)?.length;
+          turnOver = currentHandIndex === this.hands.get(playerID)?.length;
         }
         break;
       }
@@ -158,7 +159,7 @@ export default class BlackjackGame {
         nextCard.isFaceUp = false;
         currentHand.push(nextCard);
         this._currentHandIndex.set(playerID, currentHandIndex + 1);
-        const bets = this._playerBets.get(playerID) as number[];
+        const bets = this.playerBets.get(playerID) as number[];
         bets[currentHandIndex] *= 2;
         turnOver = true;
         break;
@@ -177,16 +178,16 @@ export default class BlackjackGame {
       case BlackjackMove.Stay: {
         currentHandIndex += 1;
         this._currentHandIndex.set(playerID, currentHandIndex);
-        turnOver = currentHandIndex === this._hands.get(playerID)?.length;
+        turnOver = currentHandIndex === this.hands.get(playerID)?.length;
         break;
       }
       case BlackjackMove.Leave: {
         // TODO
         this.players.slice(this.players.indexOf(playerID), 1);
-        this._hands.delete(playerID);
+        this.hands.delete(playerID);
         this._currentHandIndex.delete(playerID);
         this._handsAwaitingBet.delete(playerID);
-        this._playerBets.delete(playerID);
+        this.playerBets.delete(playerID);
         // this._playerPoints.delete(playerID);
         // Don't say turnOver = true as index should autocompensate
         break;
@@ -206,7 +207,7 @@ export default class BlackjackGame {
     if (!this.players.includes(playerID)) {
       throw new Error(`${playerID} does not exist in this game`);
     }
-    return cloneDeep(this._hands.get(playerID) as Card[][]);
+    return cloneDeep(this.hands.get(playerID) as Card[][]);
   }
 
   /**
@@ -272,9 +273,9 @@ export default class BlackjackGame {
       throw new Error('Bet must not be greater than half the current points!');
     }
     this._handsAwaitingBet.set(playerID, undefined);
-    const currentBets = this._playerBets.get(playerID) as number[];
+    const currentBets = this.playerBets.get(playerID) as number[];
     currentBets[awaitingBet as number] = bet;
-    this._playerBets.set(playerID, currentBets);
+    this.playerBets.set(playerID, currentBets);
   }
 
   // Once the game is over, distributes the points accordingly
@@ -283,7 +284,7 @@ export default class BlackjackGame {
     const dealerHandVal = this.handValues('dealer')[0];
     this.players.forEach(id => {
       const handVals = this.handValues(id);
-      const bets = this._playerBets.get(id) as number[];
+      const bets = this.playerBets.get(id) as number[];
       let points = this.playerPoints.get(id) as number;
       handVals.forEach((val, index) => {
         if (val > 21 || val < dealerHandVal) {
@@ -296,5 +297,14 @@ export default class BlackjackGame {
       });
       this.playerPoints.set(id, points);
     });
+  }
+
+  public toModel(): BlackjackGameModel {
+    return {
+      hands: this.hands,
+      playerPoints: this.playerPoints,
+      playerBets: this.playerBets,
+      playerMoveIndex: this.playerMoveIndex,
+    };
   }
 }

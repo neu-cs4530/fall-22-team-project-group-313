@@ -44,6 +44,9 @@ export default class BlackjackGame {
 
   public players: string[];
 
+  // Queue to join next round
+  private _newPlayers: string[];
+
   constructor(playerIDs: string[], numDecks?: number, shuffle?: boolean) {
     this.players = playerIDs;
     this.playerMoveIndex = 0;
@@ -53,15 +56,8 @@ export default class BlackjackGame {
     this._playerBets = new Map<string, number[]>();
     this._handsAwaitingBet = new Map<string, number | undefined>();
     this.playerPoints = new Map<string, number>();
-    playerIDs.forEach(id => {
-      this.playerPoints.set(id, 0);
-      this._hands.set(id, [[]]);
-      this._currentHandIndex.set(id, 0);
-      this._playerBets.set(id, []); // To be updated later
-      this._handsAwaitingBet.set(id, 0);
-    });
-    this._initializeDeck(shuffle ?? true);
-    this._deal();
+    this._newPlayers = [];
+    this.resetGame(shuffle);
   }
 
   public get dealerHand() {
@@ -96,6 +92,35 @@ export default class BlackjackGame {
       dealerCard.isFaceUp = i === 0;
       this._dealerHand.push(dealerCard);
     }
+  }
+
+  /**
+   * Resets the game cards and deals hands again
+   * @param shuffle if the game should be shuffled or not
+   */
+  public resetGame(shuffle?: boolean) {
+    this._initializeDeck(shuffle ?? true);
+    this.players.push(...this._newPlayers);
+    this._newPlayers = [];
+    this.players.forEach(id => {
+      this.playerPoints.set(id, 0);
+      this._hands.set(id, [[]]);
+      this._currentHandIndex.set(id, 0);
+      this._playerBets.set(id, []); // To be updated later
+      this._handsAwaitingBet.set(id, 0);
+    });
+    this._deal();
+  }
+
+  /**
+   * Adds this player to the queue to join the game next round
+   * @param playerID Player ID to be joining
+   */
+  public addPlayer(playerID: string) {
+    if (this.players.includes(playerID) || this._newPlayers.includes(playerID)) {
+      throw new Error('Player has already been added to this game!');
+    }
+    this._newPlayers.push(playerID);
   }
 
   /**
@@ -232,7 +257,7 @@ export default class BlackjackGame {
   /**
    * Sets the bet of the player hand, if applicable
    * @param playerID the player awaiting a bet
-   * @param bet how much money to bet 
+   * @param bet how much money to bet
    */
   public setBet(playerID: string, bet: number): void {
     const awaitingBet = this._handsAwaitingBet.get(playerID);

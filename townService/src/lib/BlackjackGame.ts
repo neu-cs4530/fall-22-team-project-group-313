@@ -232,7 +232,7 @@ export default class BlackjackGame {
   /**
    * Sets the bet of the player hand, if applicable
    * @param playerID the player awaiting a bet
-   * @param bet how much money to bet
+   * @param bet how much money to bet 
    */
   public setBet(playerID: string, bet: number): void {
     const awaitingBet = this._handsAwaitingBet.get(playerID);

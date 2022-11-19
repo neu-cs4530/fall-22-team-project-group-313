@@ -602,7 +602,6 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
           } else if (isViewingArea(eachInteractable)) {
             this._viewingAreas.push(new ViewingAreaController(eachInteractable));
           } else if (isBlackjackArea(eachInteractable)) {
-            console.log('\n\n HERE \n\n\n');
             this._blackjackAreasInternal.push(
               BlackjackAreaController.fromBlackjackModel(
                 eachInteractable,
@@ -653,14 +652,14 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    * @returns
    */
   public getBlackjackAreaController(blackjackArea: BlackjackArea): BlackjackAreaController {
-    const existingController = this._blackjackAreas.find(
+    const existingController = this._blackjackAreasInternal.find(
       eachExistingArea => eachExistingArea.id === blackjackArea.name,
     );
     if (existingController) {
       return existingController;
     } else {
       const newController = new BlackjackAreaController(blackjackArea.name);
-      this._blackjackAreas.push(newController);
+      this._blackjackAreasInternal.push(newController);
       return newController;
     }
   }

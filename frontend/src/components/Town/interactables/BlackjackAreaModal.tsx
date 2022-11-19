@@ -14,7 +14,7 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import React, { useCallback, useEffect, useState } from 'react';
-// import { useBlackjackAreaOccupants } from '../../../classes/BlackjackAreaController';
+import { useBlackjackAreaOccupants } from '../../../classes/BlackjackAreaController';
 import { useBlackjackAreaController } from '../../../classes/TownController';
 import useTownController from '../../../hooks/useTownController';
 import BlackjackArea from './BlackjackArea';
@@ -83,18 +83,19 @@ export default function BlackjackAreaModal({
   // eslint-disable-next-line @typescript-eslint/naming-convention
   const Card = (props: { suit: string; value: string }) => {
     let suitConversion;
+    let valueConversion;
 
     switch (props.suit) {
       case 'clubs':
         suitConversion = '♣︎';
         break;
-      case 'heart':
+      case 'hearts':
         suitConversion = '♥︎';
         break;
-      case 'diamond':
+      case 'diamonds':
         suitConversion = '♦︎';
         break;
-      case 'spade':
+      case 'spades':
         suitConversion = '♠︎';
         break;
       default:
@@ -143,7 +144,7 @@ export default function BlackjackAreaModal({
     return (
       <GridItem colStart={1} rowStart={row} rowSpan={7} colSpan={1}>
         <HStack spacing={10}>
-          <Text> Player{player} </Text>
+          <Text> {player} </Text>
           {cards.map(card => {
             return printCard(card.value, card.suit);
           })}
@@ -174,6 +175,12 @@ export default function BlackjackAreaModal({
   }
 
   function allHands(players: string[], hands: { value: string; suit: string }[][]) {
+    players.map((player: string) => {
+      {
+        console.log(player);
+      }
+    });
+
     return (
       <Grid h='200px' templateRows='repeat(25, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
         {players.map((player: string) => {
@@ -194,6 +201,8 @@ export default function BlackjackAreaModal({
     );
   }
 
+  // console.log(useBlackjackAreaOccupants(blackjackAreaController));
+
   return (
     <Modal
       isOpen={isOpen}
@@ -208,10 +217,10 @@ export default function BlackjackAreaModal({
         <ModalCloseButton />
         <ModalBody pb={6}>
           {allHands(
-            // useBlackjackAreaOccupants(blackjackAreaController).map(player => {
-            //   return player.id;
-            // }),
-            ['1', '2', '3', '4', '5'],
+            useBlackjackAreaOccupants(blackjackAreaController).map(player => {
+              return player.userName;
+            }),
+            // ['1', '2', '3', '4', '5'],
             // [[], [], [], [], []],
             [
               [
@@ -229,25 +238,26 @@ export default function BlackjackAreaModal({
                 { value: '8', suit: 'clubs' },
                 { value: '6', suit: 'spade' },
               ],
-              [
-                { value: '4', suit: 'clubs' },
-                { value: '8', suit: 'clubs' },
-                { value: '6', suit: 'spade' },
-              ],
-              [
-                { value: '4', suit: 'clubs' },
-                { value: '8', suit: 'clubs' },
-                { value: '6', suit: 'spade' },
-              ],
+              // [
+              //   { value: '4', suit: 'clubs' },
+              //   { value: '8', suit: 'clubs' },
+              //   { value: '6', suit: 'spade' },
+              // ],
+              // [
+              //   { value: '4', suit: 'clubs' },
+              //   { value: '8', suit: 'clubs' },
+              //   { value: '6', suit: 'spade' },
+              // ],
             ],
           )}
         </ModalBody>
-        <ModalFooter>
+        <ModalFooter justifyContent={'space-between'}>
+          <Text className='pull-left'>{coveyTownController.ourPlayer.userName}</Text>
           <HStack spacing={8}>
-            <Button
-              onClick={() => {
-                return setTestText(testText + 1);
-              }}>
+            <Button>
+              {/* // onClick={() => {
+              //   ;
+              // }}> */}
               Hit
             </Button>
             <Button>Stay</Button>

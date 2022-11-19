@@ -33,6 +33,9 @@ export default class BlackjackGame {
   // Bets players have on each hand
   private _playerBets: Map<string, number[]>;
 
+  // Player balances
+  public playerPoints: Map<string, number>;
+
   // Index of players' hands that need to be bet on, if any
   private _handsAwaitingBet: Map<string, number | undefined>;
 
@@ -49,7 +52,9 @@ export default class BlackjackGame {
     this._currentHandIndex = new Map<string, number>();
     this._playerBets = new Map<string, number[]>();
     this._handsAwaitingBet = new Map<string, number | undefined>();
+    this.playerPoints = new Map<string, number>();
     playerIDs.forEach(id => {
+      this.playerPoints.set(id, 0);
       this._hands.set(id, [[]]);
       this._currentHandIndex.set(id, 0);
       this._playerBets.set(id, []); // To be updated later
@@ -157,6 +162,7 @@ export default class BlackjackGame {
         this._currentHandIndex.delete(playerID);
         this._handsAwaitingBet.delete(playerID);
         this._playerBets.delete(playerID);
+        // this._playerPoints.delete(playerID);
         // Don't say turnOver = true as index should autocompensate
         break;
       }
@@ -194,10 +200,8 @@ export default class BlackjackGame {
   }
 
   /**
-   * Computes the string representation of the value of a hand.
-   * Non-Ace hands will just be the sum of the values.
-   * If the player has one ace, the string will start with an S to represent a soft-hand
-   * @param playerID The ID of the player
+   * Computes the highest value the hand can have under 21.
+   * @param playerID The ID of the player (or 'dealer')
    */
   public handValues(playerID: string): number[] {
     let hands: Card[][];
@@ -238,9 +242,34 @@ export default class BlackjackGame {
     if (bet <= 0) {
       throw new Error('Bet must be positive!');
     }
+    const maxBet = (this.playerPoints.get(playerID) as number) / 2;
+    if (bet > maxBet) {
+      throw new Error('Bet must not be greater than half the current points!');
+    }
     this._handsAwaitingBet.set(playerID, undefined);
     const currentBets = this._playerBets.get(playerID) as number[];
     currentBets[awaitingBet as number] = bet;
     this._playerBets.set(playerID, currentBets);
+  }
+
+  // Once the game is over, distributes the points accordingly
+  // Currently doesn't do anything with the dealer's points
+  private _handleBets(): void {
+    const dealerHandVal = this.handValues('dealer')[0];
+    this.players.forEach(id => {
+      const handVals = this.handValues(id);
+      const bets = this._playerBets.get(id) as number[];
+      let points = this.playerPoints.get(id) as number;
+      handVals.forEach((val, index) => {
+        if (val > 21 || val < dealerHandVal) {
+          // TODO: lose
+          points -= bets[index];
+        } else if (val > dealerHandVal) {
+          // TODO: win
+          points += bets[index] * 1.5; // TODO: Check if blackjack
+        }
+      });
+      this.playerPoints.set(id, points);
+    });
   }
 }

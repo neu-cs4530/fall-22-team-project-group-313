@@ -175,12 +175,6 @@ export default function BlackjackAreaModal({
   }
 
   function allHands(players: string[], hands: { value: string; suit: string }[][]) {
-    players.map((player: string) => {
-      {
-        console.log(player);
-      }
-    });
-
     return (
       <Grid h='200px' templateRows='repeat(25, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
         {players.map((player: string) => {
@@ -200,8 +194,6 @@ export default function BlackjackAreaModal({
       </Grid>
     );
   }
-
-  // console.log(useBlackjackAreaOccupants(blackjackAreaController));
 
   return (
     <Modal

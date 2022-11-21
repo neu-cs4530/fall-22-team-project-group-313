@@ -55,6 +55,26 @@ export type GameAction = {
   playerID: string;
 };
 
+export enum BlackjackMove {
+  Hit = "Hit",
+  Stay = "Stay",
+  Leave = "Surrender",
+  Split = "Split",
+  Double = "Double",
+}
+
+export enum Suit {
+  S = "S",
+  H = "H",
+  D = "D",
+  C = "C",
+}
+
+export type Card = {
+  rank: string;
+  suit: Suit;
+};
+
 export interface ConversationArea {
   id: string;
   topic?: string;
@@ -77,7 +97,15 @@ export interface ViewingArea {
 export interface BlackjackArea {
   id: string;
   occupantsByID: string[];
+  game: BlackjackGame;
   gameAction?: GameAction;
+}
+
+export interface BlackjackGame {
+  hands: Map<string, Card[][]>;
+  playerPoints: Map<string, number>;
+  playerBets: Map<string, number[]>;
+  playerMoveIndex: number;
 }
 
 export interface ServerToClientEvents {

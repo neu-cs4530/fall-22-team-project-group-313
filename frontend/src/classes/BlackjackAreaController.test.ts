@@ -2,7 +2,6 @@ import { mock, mockClear } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
 import { GameAction, PlayerLocation } from '../types/CoveyTownSocket';
 import BlackjackAreaController, { BlackjackAreaEvents } from './BlackjackAreaController';
-import PlayerController from './PlayerController';
 
 describe('[T2] BlackjackAreaController', () => {
   // A valid BlackjackAreaController to be reused within the tests
@@ -16,12 +15,12 @@ describe('[T2] BlackjackAreaController', () => {
       rotation: 'front',
     };
     const testGameAction: GameAction = { GameAction: 'test', playerID: 'testID' };
-    testArea = new BlackjackAreaController(nanoid(), testGameAction);
-    testArea.occupants = [
-      new PlayerController(nanoid(), nanoid(), playerLocation),
-      new PlayerController(nanoid(), nanoid(), playerLocation),
-      new PlayerController(nanoid(), nanoid(), playerLocation),
-    ];
+    // testArea = new BlackjackAreaController(nanoid(), testGameAction);
+    // testArea.occupants = [
+    //   new PlayerController(nanoid(), nanoid(), playerLocation),
+    //   new PlayerController(nanoid(), nanoid(), playerLocation),
+    //   new PlayerController(nanoid(), nanoid(), playerLocation),
+    // ];
     mockClear(mockListeners.occupantsChange);
     mockClear(mockListeners.gameActionChange);
     testArea.addListener('occupantsChange', mockListeners.occupantsChange);

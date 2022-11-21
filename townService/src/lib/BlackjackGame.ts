@@ -1,4 +1,5 @@
-import { cloneDeep } from 'lodash';
+// import { cloneDeep } from 'lodash';
+import { BlackjackGame as BlackjackGameModel } from '../types/CoveyTownSocket';
 import Card from './Card';
 
 /**
@@ -222,7 +223,7 @@ export default class BlackjackGame {
     if (!this.players.includes(playerID)) {
       throw new Error(`${playerID} does not exist in this game`);
     }
-    return cloneDeep(this._hands.get(playerID) as Card[][]);
+    return this._hands.get(playerID) as Card[][];
   }
 
   /**
@@ -312,5 +313,14 @@ export default class BlackjackGame {
       });
       this.playerPoints.set(id, points);
     });
+  }
+
+  public toModel(): BlackjackGameModel {
+    return {
+      hands: this.hands,
+      playerPoints: this.playerPoints,
+      playerBets: this.playerBets,
+      playerMoveIndex: this.playerMoveIndex,
+    };
   }
 }

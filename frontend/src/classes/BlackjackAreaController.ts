@@ -2,7 +2,12 @@ import EventEmitter from 'events';
 import _ from 'lodash';
 import { useEffect, useState } from 'react';
 import TypedEmitter from 'typed-emitter';
-import { BlackjackArea as BlackjackModel, GameAction } from '../types/CoveyTownSocket';
+import {
+  BlackjackArea as BlackjackModel,
+  BlackjackGame as BlackjackGameModel,
+  Card,
+  GameAction,
+} from '../types/CoveyTownSocket';
 import PlayerController from './PlayerController';
 
 /**
@@ -12,6 +17,8 @@ import PlayerController from './PlayerController';
 export type BlackjackAreaEvents = {
   gameActionChange: (newAction: GameAction | undefined) => void;
   occupantsChange: (newOccupants: PlayerController[]) => void;
+  handsChange: (newHands: Map<string, Card[][]>) => void;
+  pointsChange: (newPoints: Map<string, number>) => void;
 };
 
 /**
@@ -24,6 +31,8 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
 
   private _id: string;
 
+  private _game: BlackjackGameModel;
+
   private _gameAction?: GameAction;
 
   /**
@@ -31,9 +40,10 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
    * @param id
    * @param gameAction
    */
-  constructor(id: string, gameAction?: GameAction) {
+  constructor(id: string, game: BlackjackGameModel, gameAction?: GameAction) {
     super();
     this._id = id;
+    this._game = game;
     this._gameAction = gameAction;
   }
 
@@ -42,6 +52,14 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
    */
   get id() {
     return this._id;
+  }
+
+  get game() {
+    return this._game;
+  }
+
+  set game(game: BlackjackGameModel) {
+    this._game = game;
   }
 
   /**
@@ -96,6 +114,7 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
     return {
       id: this.id,
       occupantsByID: this.occupants.map(player => player.id),
+      game: this.game,
       gameAction: this.gameAction,
     };
   }
@@ -110,7 +129,11 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
     blackjackModel: BlackjackModel,
     playerFinder: (playerIDs: string[]) => PlayerController[],
   ): BlackjackAreaController {
-    const ret = new BlackjackAreaController(blackjackModel.id, blackjackModel.gameAction);
+    const ret = new BlackjackAreaController(
+      blackjackModel.id,
+      blackjackModel.game,
+      blackjackModel.gameAction,
+    );
     ret.occupants = playerFinder(blackjackModel.occupantsByID);
     return ret;
   }

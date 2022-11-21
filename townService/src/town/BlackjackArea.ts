@@ -1,4 +1,5 @@
 import { ITiledMapObject } from '@jonbell/tiled-map-type-guard';
+import BlackjackGame from '../lib/BlackjackGame';
 import Player from '../lib/Player';
 import {
   GameAction,
@@ -11,6 +12,8 @@ import InteractableArea from './InteractableArea';
 export default class BlackjackArea extends InteractableArea {
   /* The number of decks set in the blackjack area, or undefined if it is not set */
   public gameAction?: GameAction;
+
+  public game: BlackjackGame;
 
   /** The blackjack area is "active" when there are players inside of it  */
   public get isActive(): boolean {
@@ -31,6 +34,7 @@ export default class BlackjackArea extends InteractableArea {
   ) {
     super(id, coordinates, townEmitter);
     this.gameAction = gameAction;
+    this.game = new BlackjackGame([]);
   }
 
   /**
@@ -66,6 +70,7 @@ export default class BlackjackArea extends InteractableArea {
     return {
       id: this.id,
       occupantsByID: this.occupantsByID,
+      game: this.game.toModel(),
       gameAction: this.gameAction,
     };
   }
@@ -86,7 +91,12 @@ export default class BlackjackArea extends InteractableArea {
     }
     const rect: BoundingBox = { x: mapObject.x, y: mapObject.y, width, height };
     return new BlackjackArea(
-      { id: name, occupantsByID: [], gameAction: { GameAction: 'gameStart', playerID: '-1' } },
+      {
+        id: name,
+        occupantsByID: [],
+        game: new BlackjackGame([]),
+        gameAction: { GameAction: 'gameStart', playerID: '-1' },
+      },
       rect,
       broadcastEmitter,
     );

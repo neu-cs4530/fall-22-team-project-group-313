@@ -11,9 +11,10 @@ import { LoginController } from '../contexts/LoginControllerContext';
 import { TownsService, TownsServiceClient } from '../generated/client';
 import useTownController from '../hooks/useTownController';
 import {
+  BlackjackArea as BlackjackAreaModel,
+  Card,
   ChatMessage,
   CoveyTownSocket,
-  GameAction,
   PlayerLocation,
   TownSettingsUpdate,
   ViewingArea as ViewingAreaModel,
@@ -549,11 +550,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    *
    * @param newArea
    */
-  async createBlackjackArea(newArea: {
-    id: string;
-    occupantsByID: Array<string>;
-    gameAction?: GameAction;
-  }) {
+  async createBlackjackArea(newArea: BlackjackAreaModel) {
     await this._townsService.createBlackjackArea(this.townID, this.sessionToken, newArea);
   }
 
@@ -658,7 +655,12 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     if (existingController) {
       return existingController;
     } else {
-      const newController = new BlackjackAreaController(blackjackArea.name);
+      const newController = new BlackjackAreaController(blackjackArea.name, {
+        hands: new Map<string, Card[][]>(),
+        playerPoints: new Map<string, number>(),
+        playerBets: new Map<string, number[]>(),
+        playerMoveIndex: 0,
+      });
       this._blackjackAreasInternal.push(newController);
       return newController;
     }

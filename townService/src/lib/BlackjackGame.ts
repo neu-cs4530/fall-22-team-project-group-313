@@ -250,6 +250,7 @@ export default class BlackjackGame {
       this._dealerHand.push(nextCard);
       val += nextCard.value === 11 && val < 11 ? 11 : nextCard.value;
     }
+    this._handleBets();
     this.gameInProgress = false;
   }
 

@@ -250,14 +250,12 @@ export default function BlackjackAreaModal({
             // [[], [], [], [], []],
             [
               [
-                { value: 'Q', suit: 'diamond' },
-                { value: 'A', suit: 'heart' },
-                { value: '2', suit: 'spade' },
+                { value: '7', suit: 'diamond' },
+                { value: '9', suit: 'heart' },
               ],
               [
                 { value: '10', suit: 'diamond' },
                 { value: '3', suit: 'heart' },
-                { value: '4', suit: 'diamond' },
               ],
               // [
               //   { value: '4', suit: 'clubs' },

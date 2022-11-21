@@ -109,12 +109,5 @@ export default class BlackjackArea extends Interactable {
     // TODO: Delete player on Exit!
     this._labelText?.setVisible(false);
     this._isInteracting = true;
-    const bjController = this.townController.getBlackjackAreaController(this);
-    if (!bjController.occupants.find(player => player.id == this.townController.ourPlayer.id)) {
-      const occupants = bjController.occupants;
-      occupants.push(this.townController.ourPlayer);
-      bjController.occupants = occupants;
-      this.townController.emitBlackjackAreaUpdate(bjController);
-    }
   }
 }

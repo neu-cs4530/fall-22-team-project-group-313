@@ -16,9 +16,8 @@ import {
   NumberInputField,
   NumberInputStepper,
   Text,
-  useToast,
 } from '@chakra-ui/react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useBlackjackAreaOccupants } from '../../../classes/BlackjackAreaController';
 import { useBlackjackAreaController } from '../../../classes/TownController';
 import useTownController from '../../../hooks/useTownController';
@@ -35,8 +34,9 @@ export default function BlackjackAreaModal({
 }): JSX.Element {
   const coveyTownController = useTownController();
   const blackjackAreaController = useBlackjackAreaController(blackjackArea?.name);
-  const [sliderValue, setSliderValue] = React.useState(5);
-  const [testText, setTestText] = useState<number>(0);
+  const [gameNotStarted, setGameNotStarted] = React.useState(true);
+  // const [sliderValue, setSliderValue] = React.useState(5);
+  // const [testText, setTestText] = useState<number>(0);
 
   useEffect(() => {
     if (isOpen) {
@@ -51,7 +51,7 @@ export default function BlackjackAreaModal({
     close();
   }, [coveyTownController, close]);
 
-  const toast = useToast();
+  // const toast = useToast();
 
   //   const createBlackjackArea = useCallback(async () => {
   //     if (video && viewingAreaController) {
@@ -241,8 +241,26 @@ export default function BlackjackAreaModal({
       <ModalContent>
         <ModalHeader>BlackJackArea </ModalHeader>
         <ModalCloseButton />
-        <ModalBody pb={6}>
+        <Button
+          hidden={!gameNotStarted}
+          onClick={() => {
+            setGameNotStarted(false);
+            if (
+              !blackjackAreaController.occupants.find(
+                player => player.id == coveyTownController.ourPlayer.id,
+              )
+            ) {
+              const occupants = blackjackAreaController.occupants;
+              occupants.push(coveyTownController.ourPlayer);
+              blackjackAreaController.occupants = occupants;
+              coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+            }
+          }}>
+          Click to Join Game
+        </Button>
+        <ModalBody hidden={gameNotStarted} pb={6}>
           {allHands(
+            // eslint-disable-next-line react-hooks/rules-of-hooks
             useBlackjackAreaOccupants(blackjackAreaController).map(player => {
               return player.userName;
             }),
@@ -275,7 +293,7 @@ export default function BlackjackAreaModal({
             ],
           )}
         </ModalBody>
-        <ModalFooter justifyContent={'space-between'}>
+        <ModalFooter hidden={gameNotStarted} justifyContent={'space-between'}>
           <Text className='pull-left'>{coveyTownController.ourPlayer.userName}</Text>
           {wager(25)}
           <HStack spacing={8}>

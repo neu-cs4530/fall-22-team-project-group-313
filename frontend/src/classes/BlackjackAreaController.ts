@@ -171,3 +171,35 @@ export function useBlackjackAreaGameAction(area: BlackjackAreaController): GameA
   }, [area]);
   return gameAction;
 }
+
+/**
+ * A react hook to retrieve the hands of a BlackjackAreaController, returning an array of PlayerController.
+ *
+ * This hook will re-render any components that use it when the set of occupants changes.
+ */
+export function useAllHands(area: BlackjackAreaController): Map<string, Card[][]> {
+  const [allHands, setAllHands] = useState(area.game.hands);
+  useEffect(() => {
+    area.addListener('handsChange', setAllHands);
+    return () => {
+      area.removeListener('handsChange', setAllHands);
+    };
+  }, [area]);
+  return allHands;
+}
+
+/**
+ * A react hook to retrieve the player points of a BlackjackAreaController, returning an array of PlayerController.
+ *
+ * This hook will re-render any components that use it when the set of occupants changes.
+ */
+export function usePlayerPoints(area: BlackjackAreaController): Map<string, number> {
+  const [playerPoints, setPlayerPoints] = useState(area.game.playerPoints);
+  useEffect(() => {
+    area.addListener('pointsChange', setPlayerPoints);
+    return () => {
+      area.removeListener('pointsChange', setPlayerPoints);
+    };
+  }, [area]);
+  return playerPoints;
+}

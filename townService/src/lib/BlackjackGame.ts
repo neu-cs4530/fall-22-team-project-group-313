@@ -17,6 +17,8 @@ export enum BlackjackMove {
  * Class representing the current state of a blackjack game.
  */
 export default class BlackjackGame {
+  readonly PLAYERLIMIT = 5;
+
   private _deck = new Array<Card>();
 
   // Index of player to move
@@ -48,7 +50,12 @@ export default class BlackjackGame {
   // Queue to join next round
   private _newPlayers: string[];
 
+  public gameInProgress = false;
+
   constructor(playerIDs: string[], numDecks?: number, shuffle?: boolean) {
+    if (playerIDs.length > this.PLAYERLIMIT) {
+      throw new Error(`Too many players! Limit is ${this.PLAYERLIMIT}`);
+    }
     this.players = playerIDs;
     this.playerMoveIndex = 0;
     this._numDecks = numDecks ?? 6;
@@ -126,6 +133,7 @@ export default class BlackjackGame {
       this._playerBets.set(id, []); // To be updated later
       this._handsAwaitingBet.set(id, 0);
     });
+    this.gameInProgress = true;
     this._deal();
   }
 
@@ -136,6 +144,9 @@ export default class BlackjackGame {
   public addPlayer(playerID: string) {
     if (this.players.includes(playerID) || this._newPlayers.includes(playerID)) {
       throw new Error('Player has already been added to this game!');
+    }
+    if (this.players.length + this._newPlayers.length >= this.PLAYERLIMIT) {
+      throw new Error('Game has maximum number of players');
     }
     this._newPlayers.push(playerID);
   }
@@ -239,6 +250,7 @@ export default class BlackjackGame {
       this._dealerHand.push(nextCard);
       val += nextCard.value === 11 && val < 11 ? 11 : nextCard.value;
     }
+    this.gameInProgress = false;
   }
 
   /**

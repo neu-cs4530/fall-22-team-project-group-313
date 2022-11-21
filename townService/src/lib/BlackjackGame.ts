@@ -60,6 +60,22 @@ export default class BlackjackGame {
     this.resetGame(shuffle);
   }
 
+  public get hands() {
+    return this._hands;
+  }
+
+  public set hands(hands: Map<string, Card[][]>) {
+    this.hands = hands;
+  }
+
+  public get playerBets() {
+    return this._playerBets;
+  }
+
+  public set playerBets(hands: Map<string, number[]>) {
+    this.playerBets = hands;
+  }
+
   public get dealerHand() {
     return this._dealerHand;
   }

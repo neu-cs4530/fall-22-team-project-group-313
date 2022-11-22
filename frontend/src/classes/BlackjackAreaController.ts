@@ -17,6 +17,7 @@ import PlayerController from './PlayerController';
 export type BlackjackAreaEvents = {
   gameActionChange: (newAction: GameAction | undefined) => void;
   occupantsChange: (newOccupants: PlayerController[]) => void;
+  gameOccupantsChange: (newGameOccupants: PlayerController[]) => void;
   handsChange: (newHands: Map<string, Card[][]>) => void;
   pointsChange: (newPoints: Map<string, number>) => void;
 };
@@ -28,6 +29,8 @@ export type BlackjackAreaEvents = {
  */
 export default class BlackjackAreaController extends (EventEmitter as new () => TypedEmitter<BlackjackAreaEvents>) {
   private _occupants: PlayerController[] = [];
+
+  private _gameOccupants: PlayerController[] = [];
 
   private _id: string;
 
@@ -80,6 +83,20 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
     return this._occupants;
   }
 
+  set gameOccupants(newGameOccupants: PlayerController[]) {
+    if (
+      newGameOccupants.length !== this._gameOccupants.length ||
+      _.xor(newGameOccupants, this._gameOccupants).length > 0
+    ) {
+      this.emit('gameOccupantsChange', newGameOccupants);
+      this._occupants = newGameOccupants;
+    }
+  }
+
+  get gameOccupants() {
+    return this._gameOccupants;
+  }
+
   /**
    * The gameAction of the blackjack area. Changing the gameAction will emit a gameActionChange event
    *
@@ -114,6 +131,7 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
     return {
       id: this.id,
       occupantsByID: this.occupants.map(player => player.id),
+      gameOccupantsByID: this.gameOccupants.map(player => player.id),
       game: this.game,
       gameAction: this.gameAction,
     };

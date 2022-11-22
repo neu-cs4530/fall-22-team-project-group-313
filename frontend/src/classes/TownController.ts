@@ -457,6 +457,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
           const emptyNow = updatedBlackjackArea.isEmpty();
           updatedBlackjackArea.gameAction = interactable.gameAction;
           updatedBlackjackArea.occupants = this._playersByIDs(interactable.occupantsByID);
+          updatedBlackjackArea.gameOccupants = this._playersByIDs(interactable.gameOccupantsByID);
           const emptyAfterChange = updatedBlackjackArea.isEmpty();
           if (emptyNow !== emptyAfterChange) {
             this.emit('blackjackAreasChanged', this._blackjackAreasInternal);

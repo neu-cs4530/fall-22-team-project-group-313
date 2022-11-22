@@ -151,6 +151,17 @@ export default class BlackjackGame {
     this._newPlayers.push(playerID);
   }
 
+  public removePlayer(playerID: string) {
+    if (!this.players.includes(playerID) || !this._newPlayers.includes(playerID)) {
+      throw new Error('Player does not exist in this game!');
+    }
+    if (this.players.includes(playerID)) {
+      this.players.splice(this.players.indexOf(playerID), 1);
+    } else {
+      this._newPlayers.splice(this._newPlayers.indexOf(playerID), 1);
+    }
+  }
+
   /**
    * Performs a move in this game.
    * @param playerID The ID of the player making a move

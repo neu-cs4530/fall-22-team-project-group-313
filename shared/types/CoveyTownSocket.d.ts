@@ -53,6 +53,7 @@ export type ChatMessage = {
 export type GameAction = {
   GameAction: string;
   playerID: string;
+  index: number;
 };
 
 export enum BlackjackMove {
@@ -97,6 +98,7 @@ export interface ViewingArea {
 export interface BlackjackArea {
   id: string;
   occupantsByID: string[];
+  gameOccupantsByID: string[];
   game: BlackjackGame;
   gameAction?: GameAction;
 }

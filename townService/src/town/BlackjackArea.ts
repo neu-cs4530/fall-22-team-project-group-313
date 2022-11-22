@@ -1,5 +1,5 @@
 import { ITiledMapObject } from '@jonbell/tiled-map-type-guard';
-import BlackjackGame from '../lib/BlackjackGame';
+import BlackjackGame, { BlackjackMove } from '../lib/BlackjackGame';
 import Player from '../lib/Player';
 import {
   GameAction,
@@ -14,6 +14,8 @@ export default class BlackjackArea extends InteractableArea {
   public gameAction?: GameAction;
 
   public game: BlackjackGame;
+
+  public gameOccupantsByID: string[] = [];
 
   /** The blackjack area is "active" when there are players inside of it  */
   public get isActive(): boolean {
@@ -34,7 +36,7 @@ export default class BlackjackArea extends InteractableArea {
   ) {
     super(id, coordinates, townEmitter);
     this.gameAction = gameAction;
-    this.game = new BlackjackGame([]);
+    this.game = new BlackjackGame(this.gameOccupantsByID);
   }
 
   /**
@@ -58,8 +60,20 @@ export default class BlackjackArea extends InteractableArea {
    *
    * @param blackjackArea updated model
    */
-  public updateModel({ gameAction }: BlackjackModel) {
-    this.gameAction = gameAction;
+  public updateModel(newModel: BlackjackModel) {
+    const newAction = newModel.gameAction;
+    if (this.gameAction?.index !== newAction?.index) {
+      this.game.playerMove(
+        newAction?.playerID as string,
+        this.gameAction?.GameAction as BlackjackMove,
+      );
+      this.gameAction = newModel.gameAction;
+    }
+    const gameOccupants = newModel.gameOccupantsByID;
+    const addedOccupants = gameOccupants.filter(id => this.gameOccupantsByID.indexOf(id) !== -1); // Occupants added
+    addedOccupants.forEach(id => this.game.addPlayer(id));
+    const removedOccupants = this.gameOccupantsByID.filter(id => gameOccupants.indexOf(id) === -1); // Occupants removed
+    removedOccupants.forEach(id => this.game.removePlayer(id));
   }
 
   /**
@@ -70,6 +84,7 @@ export default class BlackjackArea extends InteractableArea {
     return {
       id: this.id,
       occupantsByID: this.occupantsByID,
+      gameOccupantsByID: this.gameOccupantsByID,
       game: this.game.toModel(),
       gameAction: this.gameAction,
     };
@@ -94,8 +109,9 @@ export default class BlackjackArea extends InteractableArea {
       {
         id: name,
         occupantsByID: [],
+        gameOccupantsByID: [],
         game: new BlackjackGame([]),
-        gameAction: { GameAction: 'gameStart', playerID: '-1' },
+        gameAction: { GameAction: 'gameStart', playerID: '-1', index: 0 },
       },
       rect,
       broadcastEmitter,

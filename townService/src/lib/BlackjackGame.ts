@@ -1,4 +1,3 @@
-// import { cloneDeep } from 'lodash';
 import { BlackjackGame as BlackjackGameModel } from '../types/CoveyTownSocket';
 import Card from './Card';
 
@@ -11,6 +10,12 @@ export enum BlackjackMove {
   Leave = 'Surrender',
   Split = 'Split',
   Double = 'Double',
+}
+
+export enum DealerMove {
+  StartGame = 'StartGame',
+  EndGame = 'EndGame',
+  PlayHand = 'PlayHand',
 }
 
 /**
@@ -52,6 +57,8 @@ export default class BlackjackGame {
 
   public gameInProgress = false;
 
+  private _shouldShuffle: boolean;
+
   constructor(playerIDs: string[], numDecks?: number, shuffle?: boolean) {
     if (playerIDs.length > this.PLAYERLIMIT) {
       throw new Error(`Too many players! Limit is ${this.PLAYERLIMIT}`);
@@ -65,7 +72,7 @@ export default class BlackjackGame {
     this._handsAwaitingBet = new Map<string, number | undefined>();
     this.playerPoints = new Map<string, number>();
     this._newPlayers = [];
-    this.resetGame(shuffle);
+    this._shouldShuffle = shuffle ?? true;
   }
 
   public get hands() {
@@ -151,6 +158,10 @@ export default class BlackjackGame {
     this._newPlayers.push(playerID);
   }
 
+  /**
+   * Removes this player from the queue or the game if present
+   * @param playerID player leaving
+   */
   public removePlayer(playerID: string) {
     if (!this.players.includes(playerID) || !this._newPlayers.includes(playerID)) {
       throw new Error('Player does not exist in this game!');
@@ -234,6 +245,32 @@ export default class BlackjackGame {
         throw new Error('Unknown Blackjack move');
     }
     this.playerMoveIndex += turnOver ? 1 : 0;
+  }
+
+  public dealerAction(move: DealerMove) {
+    switch (move) {
+      case DealerMove.StartGame: {
+        this.resetGame(this._shouldShuffle);
+        break;
+      }
+      case DealerMove.EndGame: {
+        // TODO: End game
+        this.players.forEach(playerID => {
+          this._hands.delete(playerID);
+          this._currentHandIndex.delete(playerID);
+          this._handsAwaitingBet.delete(playerID);
+          this._playerBets.delete(playerID);
+        });
+        this.gameInProgress = false;
+        break;
+      }
+      case DealerMove.PlayHand: {
+        this.playDealerHand();
+        break;
+      }
+      default:
+        throw new Error('Unknown dealer action!');
+    }
   }
 
   /**

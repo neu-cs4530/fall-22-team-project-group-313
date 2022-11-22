@@ -1,5 +1,5 @@
 import { ITiledMapObject } from '@jonbell/tiled-map-type-guard';
-import BlackjackGame, { BlackjackMove } from '../lib/BlackjackGame';
+import BlackjackGame, { BlackjackMove, DealerMove } from '../lib/BlackjackGame';
 import Player from '../lib/Player';
 import {
   GameAction,
@@ -63,10 +63,11 @@ export default class BlackjackArea extends InteractableArea {
   public updateModel(newModel: BlackjackModel) {
     const newAction = newModel.gameAction;
     if (this.gameAction?.index !== newAction?.index) {
-      this.game.playerMove(
-        newAction?.playerID as string,
-        this.gameAction?.GameAction as BlackjackMove,
-      );
+      if (newAction?.playerID === 'DEALER') {
+        this.game.dealerAction(newAction.GameAction as DealerMove);
+      } else {
+        this.game.playerMove(newAction?.playerID as string, newAction?.GameAction as BlackjackMove);
+      }
       this.gameAction = newModel.gameAction;
     }
     const gameOccupants = newModel.gameOccupantsByID;

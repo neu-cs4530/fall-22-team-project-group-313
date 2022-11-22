@@ -153,6 +153,7 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
       blackjackModel.gameAction,
     );
     ret.occupants = playerFinder(blackjackModel.occupantsByID);
+    ret.gameOccupants = playerFinder(blackjackModel.gameOccupantsByID);
     return ret;
   }
 }

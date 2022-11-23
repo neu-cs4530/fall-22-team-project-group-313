@@ -1,4 +1,4 @@
-import { cloneDeep } from 'lodash';
+import { BlackjackGame as BlackjackGameModel } from '../types/CoveyTownSocket';
 import Card from './Card';
 
 /**
@@ -12,10 +12,18 @@ export enum BlackjackMove {
   Double = 'Double',
 }
 
+export enum DealerMove {
+  StartGame = 'StartGame',
+  EndGame = 'EndGame',
+  PlayHand = 'PlayHand',
+}
+
 /**
  * Class representing the current state of a blackjack game.
  */
 export default class BlackjackGame {
+  readonly PLAYERLIMIT = 5;
+
   private _deck = new Array<Card>();
 
   // Index of player to move
@@ -47,7 +55,14 @@ export default class BlackjackGame {
   // Queue to join next round
   private _newPlayers: string[];
 
+  public gameInProgress = false;
+
+  private _shouldShuffle: boolean;
+
   constructor(playerIDs: string[], numDecks?: number, shuffle?: boolean) {
+    if (playerIDs.length > this.PLAYERLIMIT) {
+      throw new Error(`Too many players! Limit is ${this.PLAYERLIMIT}`);
+    }
     this.players = playerIDs;
     this.playerMoveIndex = 0;
     this._numDecks = numDecks ?? 6;
@@ -57,7 +72,23 @@ export default class BlackjackGame {
     this._handsAwaitingBet = new Map<string, number | undefined>();
     this.playerPoints = new Map<string, number>();
     this._newPlayers = [];
-    this.resetGame(shuffle);
+    this._shouldShuffle = shuffle ?? true;
+  }
+
+  public get hands() {
+    return this._hands;
+  }
+
+  public set hands(hands: Map<string, Card[][]>) {
+    this.hands = hands;
+  }
+
+  public get playerBets() {
+    return this._playerBets;
+  }
+
+  public set playerBets(hands: Map<string, number[]>) {
+    this.playerBets = hands;
   }
 
   public get dealerHand() {
@@ -109,7 +140,11 @@ export default class BlackjackGame {
       this._playerBets.set(id, []); // To be updated later
       this._handsAwaitingBet.set(id, 0);
     });
+    this.gameInProgress = true;
     this._deal();
+
+    console.log('Game Reset');
+    console.log('Hands: ', this._hands);
   }
 
   /**
@@ -117,10 +152,29 @@ export default class BlackjackGame {
    * @param playerID Player ID to be joining
    */
   public addPlayer(playerID: string) {
+    console.log('ADD PLAYER');
     if (this.players.includes(playerID) || this._newPlayers.includes(playerID)) {
       throw new Error('Player has already been added to this game!');
     }
+    if (this.players.length + this._newPlayers.length >= this.PLAYERLIMIT) {
+      throw new Error('Game has maximum number of players');
+    }
     this._newPlayers.push(playerID);
+  }
+
+  /**
+   * Removes this player from the queue or the game if present
+   * @param playerID player leaving
+   */
+  public removePlayer(playerID: string) {
+    if (!this.players.includes(playerID) || !this._newPlayers.includes(playerID)) {
+      throw new Error('Player does not exist in this game!');
+    }
+    if (this.players.includes(playerID)) {
+      this.players.splice(this.players.indexOf(playerID), 1);
+    } else {
+      this._newPlayers.splice(this._newPlayers.indexOf(playerID), 1);
+    }
   }
 
   /**
@@ -197,6 +251,32 @@ export default class BlackjackGame {
     this.playerMoveIndex += turnOver ? 1 : 0;
   }
 
+  public dealerAction(move: DealerMove) {
+    switch (move) {
+      case DealerMove.StartGame: {
+        this.resetGame(this._shouldShuffle);
+        break;
+      }
+      case DealerMove.EndGame: {
+        // TODO: End game
+        this.players.forEach(playerID => {
+          this._hands.delete(playerID);
+          this._currentHandIndex.delete(playerID);
+          this._handsAwaitingBet.delete(playerID);
+          this._playerBets.delete(playerID);
+        });
+        this.gameInProgress = false;
+        break;
+      }
+      case DealerMove.PlayHand: {
+        this.playDealerHand();
+        break;
+      }
+      default:
+        throw new Error('Unknown dealer action!');
+    }
+  }
+
   /**
    * Gets the hand(s) that a player has in this game.
    * @param playerID The player ID in the game
@@ -206,7 +286,7 @@ export default class BlackjackGame {
     if (!this.players.includes(playerID)) {
       throw new Error(`${playerID} does not exist in this game`);
     }
-    return cloneDeep(this._hands.get(playerID) as Card[][]);
+    return this._hands.get(playerID) as Card[][];
   }
 
   /**
@@ -222,6 +302,8 @@ export default class BlackjackGame {
       this._dealerHand.push(nextCard);
       val += nextCard.value === 11 && val < 11 ? 11 : nextCard.value;
     }
+    this._handleBets();
+    this.gameInProgress = false;
   }
 
   /**
@@ -296,5 +378,16 @@ export default class BlackjackGame {
       });
       this.playerPoints.set(id, points);
     });
+  }
+
+  public toModel() {
+    const game = {
+      hands: Array.from(this.hands.values()),
+      playerPoints: Array.from(this.playerPoints.values()),
+      playerBets: Array.from(this.playerBets.values()),
+      playerMoveIndex: this.playerMoveIndex,
+    };
+    console.log('toModel Game: ', game);
+    return game;
   }
 }

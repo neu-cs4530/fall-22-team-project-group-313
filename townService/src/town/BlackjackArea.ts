@@ -1,16 +1,22 @@
 import { ITiledMapObject } from '@jonbell/tiled-map-type-guard';
+import BlackjackGame, { BlackjackMove, DealerMove } from '../lib/BlackjackGame';
 import Player from '../lib/Player';
 import {
   GameAction,
   BoundingBox,
   BlackjackArea as BlackjackModel,
   TownEmitter,
+  BlackjackGame as BlackjackGameModel,
 } from '../types/CoveyTownSocket';
 import InteractableArea from './InteractableArea';
 
 export default class BlackjackArea extends InteractableArea {
   /* The number of decks set in the blackjack area, or undefined if it is not set */
   public gameAction?: GameAction;
+
+  public game: BlackjackGame;
+
+  public gameOccupantsByID: string[] = [];
 
   /** The blackjack area is "active" when there are players inside of it  */
   public get isActive(): boolean {
@@ -31,6 +37,7 @@ export default class BlackjackArea extends InteractableArea {
   ) {
     super(id, coordinates, townEmitter);
     this.gameAction = gameAction;
+    this.game = new BlackjackGame(this.gameOccupantsByID);
   }
 
   /**
@@ -54,8 +61,23 @@ export default class BlackjackArea extends InteractableArea {
    *
    * @param blackjackArea updated model
    */
-  public updateModel({ gameAction }: BlackjackModel) {
-    this.gameAction = gameAction;
+  public updateModel(newModel: BlackjackModel) {
+    const gameOccupants = newModel.gameOccupantsByID;
+    const addedOccupants = gameOccupants.filter(id => this.gameOccupantsByID.indexOf(id) === -1); // Occupants added
+    addedOccupants.forEach(id => this.game.addPlayer(id));
+    const removedOccupants = this.gameOccupantsByID.filter(id => gameOccupants.indexOf(id) === -1); // Occupants removed
+    removedOccupants.forEach(id => this.game.removePlayer(id));
+    const newAction = newModel.gameAction;
+    if (this.gameAction?.index !== newAction?.index) {
+      if (newAction?.playerID === 'DEALER') {
+        this.game.dealerAction(newAction.GameAction as DealerMove);
+      } else {
+        this.game.playerMove(newAction?.playerID as string, newAction?.GameAction as BlackjackMove);
+      }
+      this.gameAction = newModel.gameAction;
+    }
+    console.log('Update Model: ', this.toModel());
+    this._emitAreaChanged();
   }
 
   /**
@@ -66,6 +88,8 @@ export default class BlackjackArea extends InteractableArea {
     return {
       id: this.id,
       occupantsByID: this.occupantsByID,
+      gameOccupantsByID: this.gameOccupantsByID,
+      game: this.game.toModel(),
       gameAction: this.gameAction,
     };
   }
@@ -85,6 +109,17 @@ export default class BlackjackArea extends InteractableArea {
       throw new Error(`Malformed viewing area ${name}`);
     }
     const rect: BoundingBox = { x: mapObject.x, y: mapObject.y, width, height };
-    return new BlackjackArea({ id: name, occupantsByID: [] }, rect, broadcastEmitter);
+    const game = new BlackjackGame([]);
+    return new BlackjackArea(
+      {
+        id: name,
+        occupantsByID: [],
+        gameOccupantsByID: [],
+        game: game.toModel(),
+        gameAction: { GameAction: 'gameStart', playerID: '-1', index: -1 },
+      },
+      rect,
+      broadcastEmitter,
+    );
   }
 }

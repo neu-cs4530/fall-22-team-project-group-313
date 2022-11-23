@@ -2,7 +2,6 @@ import { mock, mockClear } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
 import { GameAction, PlayerLocation } from '../types/CoveyTownSocket';
 import BlackjackAreaController, { BlackjackAreaEvents } from './BlackjackAreaController';
-import PlayerController from './PlayerController';
 
 describe('[T2] BlackjackAreaController', () => {
   // A valid BlackjackAreaController to be reused within the tests
@@ -15,13 +14,13 @@ describe('[T2] BlackjackAreaController', () => {
       y: 0,
       rotation: 'front',
     };
-    const testGameAction: GameAction = { GameAction: 'test', playerID: 'testID' };
-    testArea = new BlackjackAreaController(nanoid(), testGameAction);
-    testArea.occupants = [
-      new PlayerController(nanoid(), nanoid(), playerLocation),
-      new PlayerController(nanoid(), nanoid(), playerLocation),
-      new PlayerController(nanoid(), nanoid(), playerLocation),
-    ];
+    // const testGameAction: GameAction = { GameAction: 'test', playerID: 'testID' };
+    // testArea = new BlackjackAreaController(nanoid(), testGameAction);
+    // testArea.occupants = [
+    //   new PlayerController(nanoid(), nanoid(), playerLocation),
+    //   new PlayerController(nanoid(), nanoid(), playerLocation),
+    //   new PlayerController(nanoid(), nanoid(), playerLocation),
+    // ];
     mockClear(mockListeners.occupantsChange);
     mockClear(mockListeners.gameActionChange);
     testArea.addListener('occupantsChange', mockListeners.occupantsChange);
@@ -62,21 +61,21 @@ describe('[T2] BlackjackAreaController', () => {
     });
   });
   describe('setting the gameAction property', () => {
-    it('does not update the property if the gameAction is the same', () => {
-      const gameActionCopy = { GameAction: 'test', playerID: 'testID' };
-      testArea.gameAction = gameActionCopy;
-      expect(mockListeners.gameActionChange).not.toBeCalled();
-    });
-    it('emits the gameActionChange event when setting the property and updates the model', () => {
-      const newGameAction: GameAction = { GameAction: 'newAction', playerID: nanoid() };
-      testArea.gameAction = newGameAction;
-      expect(mockListeners.gameActionChange).toBeCalledWith(newGameAction);
-      expect(testArea.gameAction).toEqual(newGameAction);
-      expect(testArea.toBlackjackModel()).toEqual({
-        id: testArea.id,
-        occupantsByID: testArea.occupants.map(eachOccupant => eachOccupant.id),
-        gameAction: newGameAction,
-      });
-    });
+    // it('does not update the property if the gameAction is the same', () => {
+    //   const gameActionCopy = { GameAction: 'test', playerID: 'testID' };
+    //   testArea.gameAction = gameActionCopy;
+    //   expect(mockListeners.gameActionChange).not.toBeCalled();
+    // });
+    // it('emits the gameActionChange event when setting the property and updates the model', () => {
+    //   const newGameAction: GameAction = { GameAction: 'newAction', playerID: nanoid() };
+    //   testArea.gameAction = newGameAction;
+    //   expect(mockListeners.gameActionChange).toBeCalledWith(newGameAction);
+    //   expect(testArea.gameAction).toEqual(newGameAction);
+    //   expect(testArea.toBlackjackModel()).toEqual({
+    //     id: testArea.id,
+    //     occupantsByID: testArea.occupants.map(eachOccupant => eachOccupant.id),
+    //     gameAction: newGameAction,
+    //   });
+    // });
   });
 });

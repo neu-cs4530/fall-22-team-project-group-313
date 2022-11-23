@@ -2,7 +2,12 @@ import EventEmitter from 'events';
 import _ from 'lodash';
 import { useEffect, useState } from 'react';
 import TypedEmitter from 'typed-emitter';
-import { BlackjackArea as BlackjackModel, GameAction } from '../types/CoveyTownSocket';
+import {
+  BlackjackArea as BlackjackModel,
+  BlackjackGame as BlackjackGameModel,
+  Card,
+  GameAction,
+} from '../types/CoveyTownSocket';
 import PlayerController from './PlayerController';
 
 /**
@@ -12,6 +17,9 @@ import PlayerController from './PlayerController';
 export type BlackjackAreaEvents = {
   gameActionChange: (newAction: GameAction | undefined) => void;
   occupantsChange: (newOccupants: PlayerController[]) => void;
+  gameOccupantsChange: (newGameOccupants: PlayerController[]) => void;
+  handsChange: (newHands: Card[][][]) => void;
+  pointsChange: (newPoints: number[]) => void;
 };
 
 /**
@@ -22,7 +30,11 @@ export type BlackjackAreaEvents = {
 export default class BlackjackAreaController extends (EventEmitter as new () => TypedEmitter<BlackjackAreaEvents>) {
   private _occupants: PlayerController[] = [];
 
+  private _gameOccupants: PlayerController[] = [];
+
   private _id: string;
+
+  private _game: BlackjackGameModel;
 
   private _gameAction?: GameAction;
 
@@ -31,9 +43,10 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
    * @param id
    * @param gameAction
    */
-  constructor(id: string, gameAction?: GameAction) {
+  constructor(id: string, game: BlackjackGameModel, gameAction?: GameAction) {
     super();
     this._id = id;
+    this._game = game;
     this._gameAction = gameAction;
   }
 
@@ -42,6 +55,31 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
    */
   get id() {
     return this._id;
+  }
+
+  get game() {
+    return this._game;
+  }
+
+  set game(game: BlackjackGameModel) {
+    console.log('Old Game', this._game);
+    console.log('New Game', game);
+    this._game.hands = game.hands;
+    this.emit('handsChange', game.hands);
+    this._game.playerPoints = game.playerPoints;
+    this.emit('pointsChange', game.playerPoints);
+    // if (
+    //   _.xor(Object.keys(this._game.hands), Object.keys(game.hands)).length > 0 ||
+    //   _.xor(Object.values(this._game.hands), Object.values(game.hands)).length > 0
+    // ) {
+
+    // }
+    // if (
+    //   _.xor(Object.keys(this._game.playerPoints), Object.keys(game.playerPoints)).length > 0 ||
+    //   _.xor(Object.values(this._game.playerPoints), Object.values(game.playerPoints)).length > 0
+    // ) {
+
+    // }
   }
 
   /**
@@ -53,13 +91,27 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
       newOccupants.length !== this._occupants.length ||
       _.xor(newOccupants, this._occupants).length > 0
     ) {
-      this.emit('occupantsChange', newOccupants);
       this._occupants = newOccupants;
+      this.emit('occupantsChange', newOccupants);
     }
   }
 
   get occupants() {
     return this._occupants;
+  }
+
+  set gameOccupants(newGameOccupants: PlayerController[]) {
+    if (
+      newGameOccupants.length !== this._gameOccupants.length ||
+      _.xor(newGameOccupants, this._gameOccupants).length > 0
+    ) {
+      this.emit('gameOccupantsChange', newGameOccupants);
+      this._occupants = newGameOccupants;
+    }
+  }
+
+  get gameOccupants() {
+    return this._gameOccupants;
   }
 
   /**
@@ -96,6 +148,8 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
     return {
       id: this.id,
       occupantsByID: this.occupants.map(player => player.id),
+      gameOccupantsByID: this.gameOccupants.map(player => player.id),
+      game: this.game,
       gameAction: this.gameAction,
     };
   }
@@ -110,8 +164,13 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
     blackjackModel: BlackjackModel,
     playerFinder: (playerIDs: string[]) => PlayerController[],
   ): BlackjackAreaController {
-    const ret = new BlackjackAreaController(blackjackModel.id, blackjackModel.gameAction);
+    const ret = new BlackjackAreaController(
+      blackjackModel.id,
+      blackjackModel.game,
+      blackjackModel.gameAction,
+    );
     ret.occupants = playerFinder(blackjackModel.occupantsByID);
+    ret.gameOccupants = playerFinder(blackjackModel.gameOccupantsByID);
     return ret;
   }
 }
@@ -132,6 +191,17 @@ export function useBlackjackAreaOccupants(area: BlackjackAreaController): Player
   return occupants;
 }
 
+export function useBlackjackAreaGameOccupants(area: BlackjackAreaController): PlayerController[] {
+  const [gameOccupants, setGameOccupants] = useState(area.gameOccupants);
+  useEffect(() => {
+    area.addListener('gameOccupantsChange', setGameOccupants);
+    return () => {
+      area.removeListener('gameOccupantsChange', setGameOccupants);
+    };
+  }, [area]);
+  return gameOccupants;
+}
+
 /**
  * A react hook to retrieve the gameAction of a BlackjackAreaController.
  * If there is currently no gameAction defined, it will return undefined.
@@ -147,4 +217,36 @@ export function useBlackjackAreaGameAction(area: BlackjackAreaController): GameA
     };
   }, [area]);
   return gameAction;
+}
+
+/**
+ * A react hook to retrieve the hands of a BlackjackAreaController, returning an array of PlayerController.
+ *
+ * This hook will re-render any components that use it when the set of occupants changes.
+ */
+export function useAllHands(area: BlackjackAreaController): Card[][][] {
+  const [allHands, setAllHands] = useState(area.game.hands);
+  useEffect(() => {
+    area.addListener('handsChange', setAllHands);
+    return () => {
+      area.removeListener('handsChange', setAllHands);
+    };
+  }, [area]);
+  return allHands;
+}
+
+/**
+ * A react hook to retrieve the player points of a BlackjackAreaController, returning an array of PlayerController.
+ *
+ * This hook will re-render any components that use it when the set of occupants changes.
+ */
+export function usePlayerPoints(area: BlackjackAreaController): number[] {
+  const [playerPoints, setPlayerPoints] = useState(area.game.playerPoints);
+  useEffect(() => {
+    area.addListener('pointsChange', setPlayerPoints);
+    return () => {
+      area.removeListener('pointsChange', setPlayerPoints);
+    };
+  }, [area]);
+  return playerPoints;
 }

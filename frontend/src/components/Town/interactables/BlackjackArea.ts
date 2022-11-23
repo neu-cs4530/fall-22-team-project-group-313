@@ -19,7 +19,7 @@ export default class BlackjackArea extends Interactable {
     this._labelText = this.scene.add.text(
       this.x - this.displayWidth / 2,
       this.y - this.displayHeight / 2,
-      `Press space to play a game of blackjack\n` + this.leaderboard(),
+      `Press space to play Blackjack\n\n` + this.leaderboard(),
       { color: '#FFFFFF', backgroundColor: '#000000' },
     );
     this._labelText.setVisible(false);
@@ -93,6 +93,7 @@ export default class BlackjackArea extends Interactable {
     const location = this.townController.ourPlayer.location;
     this._labelText.setX(location.x);
     this._labelText.setY(location.y);
+    this._labelText.setDepth(100);
     this._labelText.setVisible(true);
   }
 
@@ -105,7 +106,15 @@ export default class BlackjackArea extends Interactable {
   }
 
   interact(): void {
+    // TODO: Delete player on Exit!
     this._labelText?.setVisible(false);
     this._isInteracting = true;
+    const bjController = this.townController.getBlackjackAreaController(this);
+    if (!bjController.occupants.find(player => player.id == this.townController.ourPlayer.id)) {
+      const occupants = bjController.occupants;
+      occupants.push(this.townController.ourPlayer);
+      bjController.occupants = occupants;
+      this.townController.emitBlackjackAreaUpdate(bjController);
+    }
   }
 }

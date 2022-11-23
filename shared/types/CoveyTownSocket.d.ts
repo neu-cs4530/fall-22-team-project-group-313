@@ -53,6 +53,27 @@ export type ChatMessage = {
 export type GameAction = {
   GameAction: string;
   playerID: string;
+  index: number;
+};
+
+export enum BlackjackMove {
+  Hit = "Hit",
+  Stay = "Stay",
+  Leave = "Surrender",
+  Split = "Split",
+  Double = "Double",
+}
+
+export enum Suit {
+  S = "S",
+  H = "H",
+  D = "D",
+  C = "C",
+}
+
+export type Card = {
+  rank: string;
+  suit: Suit;
 };
 
 export interface ConversationArea {
@@ -77,7 +98,16 @@ export interface ViewingArea {
 export interface BlackjackArea {
   id: string;
   occupantsByID: string[];
+  gameOccupantsByID: string[];
+  game: BlackjackGame;
   gameAction?: GameAction;
+}
+
+export interface BlackjackGame {
+  hands: Card[][][];
+  playerPoints: number[];
+  playerBets: number[][];
+  playerMoveIndex: number;
 }
 
 export interface ServerToClientEvents {

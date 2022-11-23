@@ -11,9 +11,10 @@ import { LoginController } from '../contexts/LoginControllerContext';
 import { TownsService, TownsServiceClient } from '../generated/client';
 import useTownController from '../hooks/useTownController';
 import {
+  BlackjackArea as BlackjackAreaModel,
+  Card,
   ChatMessage,
   CoveyTownSocket,
-  GameAction,
   PlayerLocation,
   TownSettingsUpdate,
   ViewingArea as ViewingAreaModel,
@@ -434,6 +435,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
      * events (@see ViewingAreaController and @see ConversationAreaController and @see BlackjackAreaController)
      */
     this._socket.on('interactableUpdate', interactable => {
+      console.log('interactableUpdate hit in TownController');
       if (isConversationArea(interactable)) {
         const updatedConversationArea = this.conversationAreas.find(c => c.id === interactable.id);
         if (updatedConversationArea) {
@@ -453,9 +455,14 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
       } else if (isBlackjackArea(interactable)) {
         const updatedBlackjackArea = this.blackjackAreas.find(c => c.id === interactable.id);
         if (updatedBlackjackArea) {
+          console.log('blackjack update in townController');
+          console.log('Old area: ', updatedBlackjackArea);
+          console.log('New Area: ', interactable);
           const emptyNow = updatedBlackjackArea.isEmpty();
           updatedBlackjackArea.gameAction = interactable.gameAction;
+          updatedBlackjackArea.game = interactable.game;
           updatedBlackjackArea.occupants = this._playersByIDs(interactable.occupantsByID);
+          updatedBlackjackArea.gameOccupants = this._playersByIDs(interactable.gameOccupantsByID);
           const emptyAfterChange = updatedBlackjackArea.isEmpty();
           if (emptyNow !== emptyAfterChange) {
             this.emit('blackjackAreasChanged', this._blackjackAreasInternal);
@@ -549,11 +556,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    *
    * @param newArea
    */
-  async createBlackjackArea(newArea: {
-    id: string;
-    occupantsByID: Array<string>;
-    gameAction?: GameAction;
-  }) {
+  async createBlackjackArea(newArea: BlackjackAreaModel) {
     await this._townsService.createBlackjackArea(this.townID, this.sessionToken, newArea);
   }
 
@@ -590,6 +593,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
         this._conversationAreas = [];
         this._viewingAreas = [];
         this._blackjackAreas = [];
+        console.log(initialData.interactables);
         initialData.interactables.forEach(eachInteractable => {
           if (isConversationArea(eachInteractable)) {
             this._conversationAreasInternal.push(
@@ -651,14 +655,19 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    * @returns
    */
   public getBlackjackAreaController(blackjackArea: BlackjackArea): BlackjackAreaController {
-    const existingController = this._blackjackAreas.find(
+    const existingController = this._blackjackAreasInternal.find(
       eachExistingArea => eachExistingArea.id === blackjackArea.name,
     );
     if (existingController) {
       return existingController;
     } else {
-      const newController = new BlackjackAreaController(blackjackArea.name);
-      this._blackjackAreas.push(newController);
+      const newController = new BlackjackAreaController(blackjackArea.name, {
+        hands: [[[]]],
+        playerPoints: [],
+        playerBets: [[]],
+        playerMoveIndex: 0,
+      });
+      this._blackjackAreasInternal.push(newController);
       return newController;
     }
   }
@@ -803,8 +812,9 @@ export function useBlackjackAreaController(blackjackAreaID: string): BlackjackAr
   const blackjackArea = townController.blackjackAreas.find(
     eachArea => eachArea.id == blackjackAreaID,
   );
+
   if (!blackjackArea) {
-    throw new Error(`Requested viewing area ${blackjackAreaID} does not exist`);
+    throw new Error(`Requested blackjack area ${blackjackAreaID} does not exist`);
   }
   return blackjackArea;
 }

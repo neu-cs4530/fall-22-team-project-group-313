@@ -62,7 +62,24 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
   }
 
   set game(game: BlackjackGameModel) {
-    this._game = game;
+    console.log('Old Game', this._game);
+    console.log('New Game', game);
+    this._game.hands = game.hands;
+    this.emit('handsChange', game.hands);
+    this._game.playerPoints = game.playerPoints;
+    this.emit('pointsChange', game.playerPoints);
+    // if (
+    //   _.xor(Object.keys(this._game.hands), Object.keys(game.hands)).length > 0 ||
+    //   _.xor(Object.values(this._game.hands), Object.values(game.hands)).length > 0
+    // ) {
+
+    // }
+    // if (
+    //   _.xor(Object.keys(this._game.playerPoints), Object.keys(game.playerPoints)).length > 0 ||
+    //   _.xor(Object.values(this._game.playerPoints), Object.values(game.playerPoints)).length > 0
+    // ) {
+
+    // }
   }
 
   /**

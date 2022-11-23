@@ -76,17 +76,6 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
       this._game.playerPoints = game.playerPoints;
       this.emit('pointsChange', game.playerPoints);
     }
-    // if (
-    //   _.xor(Object.keys(this._game.playerBets), Object.keys(game.playerBets)).length > 0 ||
-    //   _.xor(Object.values(this._game.playerBets), Object.values(game.playerBets)).length > 0
-    // ) {
-    //   this._game.playerBets = game.playerBets;
-    //   this.emit('betsChanged', game.playerBets);
-    // }
-    // if (this._game.playerMoveIndex !== game.playerMoveIndex) {
-    //   this._game.playerMoveIndex = game.playerMoveIndex;
-    //   this.emit('moveIndexChange', game.playerMoveIndex);
-    // }
   }
 
   /**
@@ -98,8 +87,8 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
       newOccupants.length !== this._occupants.length ||
       _.xor(newOccupants, this._occupants).length > 0
     ) {
-      this._occupants = newOccupants;
       this.emit('occupantsChange', newOccupants);
+      this._occupants = newOccupants;
     }
   }
 
@@ -228,7 +217,6 @@ export function useAllHands(area: BlackjackAreaController): Map<string, Card[][]
       area.removeListener('handsChange', setAllHands);
     };
   }, [area]);
-  console.log('All Hands', allHands);
   return allHands;
 }
 

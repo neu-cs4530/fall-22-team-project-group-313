@@ -250,7 +250,6 @@ export default class BlackjackGame {
   public dealerAction(move: DealerMove) {
     switch (move) {
       case DealerMove.StartGame: {
-        console.log('GAME STARTED');
         this.resetGame(this._shouldShuffle);
         break;
       }

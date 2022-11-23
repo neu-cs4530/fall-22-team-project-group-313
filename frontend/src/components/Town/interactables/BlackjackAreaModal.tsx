@@ -265,6 +265,8 @@ export default function BlackjackAreaModal({
         );
         coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
         coveyTownController.unPause();
+        console.log(blackjackAreaController);
+        console.log(coveyTownController);
       }}
       size='full'>
       <ModalOverlay />
@@ -291,16 +293,10 @@ export default function BlackjackAreaModal({
           <Text className='pull-left'>{coveyTownController.ourPlayer.userName}</Text>
           {wager(25)}
           <HStack spacing={8}>
-            <Button
-              onClick={() => {
-                const a: GameAction = {
-                  index: 0,
-                  GameAction: 'TEST',
-                  playerID: coveyTownController.ourPlayer.id,
-                };
-                blackjackAreaController.gameAction = a;
-                coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
-              }}>
+            <Button>
+              {/* // onClick={() => {
+              //   ;
+              // }}> */}
               Hit
             </Button>
             <Button>Stay</Button>

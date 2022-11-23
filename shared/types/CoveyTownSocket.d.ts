@@ -108,6 +108,8 @@ export interface BlackjackGame {
   playerPoints: number[];
   playerBets: number[][];
   playerMoveIndex: number;
+  players: string[];
+  isStarted: boolean;
 }
 
 export interface ServerToClientEvents {

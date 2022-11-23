@@ -386,8 +386,9 @@ export default class BlackjackGame {
       playerPoints: Array.from(this.playerPoints.values()),
       playerBets: Array.from(this.playerBets.values()),
       playerMoveIndex: this.playerMoveIndex,
+      players: this.players,
+      isStarted: this.gameInProgress,
     };
-    console.log('toModel Game: ', game);
     return game;
   }
 }

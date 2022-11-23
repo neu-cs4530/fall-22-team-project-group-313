@@ -161,6 +161,7 @@ export default class Town {
           eachInteractable => eachInteractable.id === update.id,
         );
         if (blackjackArea) {
+          console.log('CALLING UPDATE MODEL!!!');
           (blackjackArea as BlackjackArea).updateModel(update);
         }
       }

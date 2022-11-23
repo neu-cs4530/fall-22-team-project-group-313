@@ -17,10 +17,12 @@ import {
   NumberInputStepper,
   Text,
 } from '@chakra-ui/react';
+import _ from 'lodash';
 import React, { useCallback, useEffect } from 'react';
-import { useBlackjackAreaOccupants } from '../../../classes/BlackjackAreaController';
+import { useAllHands } from '../../../classes/BlackjackAreaController';
 import { useBlackjackAreaController } from '../../../classes/TownController';
 import useTownController from '../../../hooks/useTownController';
+import { GameAction } from '../../../types/CoveyTownSocket';
 import BlackjackArea from './BlackjackArea';
 
 export default function BlackjackAreaModal({
@@ -222,6 +224,36 @@ export default function BlackjackAreaModal({
     else return outputWager(Math.trunc(points * 0.05), Math.trunc(points * 0.25));
   }
 
+  function addPlayersToGame() {
+    if (
+      !blackjackAreaController.occupants.find(
+        player => player.id == coveyTownController.ourPlayer.id,
+      )
+    ) {
+      const occupants = blackjackAreaController.occupants;
+      occupants.push(coveyTownController.ourPlayer);
+      blackjackAreaController.occupants = occupants;
+      coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+    }
+    const lobbyPlayers = _.xor(
+      blackjackAreaController.occupants,
+      blackjackAreaController.gameOccupants,
+    );
+
+    if (lobbyPlayers.length > 0) {
+      for (const player of lobbyPlayers) blackjackAreaController.gameOccupants.push(player);
+    }
+  }
+
+  function updateGameModel(index: number, player: string, action: string) {
+    const a: GameAction = {
+      index: index,
+      GameAction: action,
+      playerID: player,
+    };
+    blackjackAreaController.gameAction = a;
+  }
+
   return (
     <Modal
       isOpen={isOpen}
@@ -233,8 +265,6 @@ export default function BlackjackAreaModal({
         );
         coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
         coveyTownController.unPause();
-        console.log(blackjackAreaController);
-        console.log(coveyTownController);
       }}
       size='full'>
       <ModalOverlay />
@@ -244,63 +274,33 @@ export default function BlackjackAreaModal({
         <Button
           hidden={!gameNotStarted}
           onClick={() => {
+            addPlayersToGame();
+            updateGameModel(0, 'DEALER', 'StartGame');
+            coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
             setGameNotStarted(false);
-            if (
-              !blackjackAreaController.occupants.find(
-                player => player.id == coveyTownController.ourPlayer.id,
-              )
-            ) {
-              const occupants = blackjackAreaController.occupants;
-              occupants.push(coveyTownController.ourPlayer);
-              blackjackAreaController.occupants = occupants;
-              coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
-            }
           }}>
-          Click to Join Game
+          Click to Start Game (ADD PLAYER NAMES TO LOBBY)
         </Button>
         <ModalBody hidden={gameNotStarted} pb={6}>
           {allHands(
-            // eslint-disable-next-line react-hooks/rules-of-hooks
-            useBlackjackAreaOccupants(blackjackAreaController).map(player => {
-              return player.userName;
-            }),
-            // ['1', '2', '3', '4', '5'],
-            // [[], [], [], [], []],
-            [
-              [
-                { value: '7', suit: 'diamond' },
-                { value: '9', suit: 'heart' },
-              ],
-              [
-                { value: '10', suit: 'diamond' },
-                { value: '3', suit: 'heart' },
-              ],
-              // [
-              //   { value: '4', suit: 'clubs' },
-              //   { value: '8', suit: 'clubs' },
-              //   { value: '6', suit: 'spade' },
-              // ],
-              // [
-              //   { value: '4', suit: 'clubs' },
-              //   { value: '8', suit: 'clubs' },
-              //   { value: '6', suit: 'spade' },
-              // ],
-              // [
-              //   { value: '4', suit: 'clubs' },
-              //   { value: '8', suit: 'clubs' },
-              //   { value: '6', suit: 'spade' },
-              // ],
-            ],
+            Object.keys(useAllHands(blackjackAreaController)),
+            Object.values(useAllHands(blackjackAreaController)),
           )}
         </ModalBody>
         <ModalFooter hidden={gameNotStarted} justifyContent={'space-between'}>
           <Text className='pull-left'>{coveyTownController.ourPlayer.userName}</Text>
           {wager(25)}
           <HStack spacing={8}>
-            <Button>
-              {/* // onClick={() => {
-              //   ;
-              // }}> */}
+            <Button
+              onClick={() => {
+                const a: GameAction = {
+                  index: 0,
+                  GameAction: 'TEST',
+                  playerID: coveyTownController.ourPlayer.id,
+                };
+                blackjackAreaController.gameAction = a;
+                coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+              }}>
               Hit
             </Button>
             <Button>Stay</Button>

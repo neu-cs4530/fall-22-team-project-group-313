@@ -142,6 +142,9 @@ export default class BlackjackGame {
     });
     this.gameInProgress = true;
     this._deal();
+
+    console.log('Game Reset');
+    console.log('Hands: ', this._hands);
   }
 
   /**
@@ -149,6 +152,7 @@ export default class BlackjackGame {
    * @param playerID Player ID to be joining
    */
   public addPlayer(playerID: string) {
+    console.log('ADD PLAYER');
     if (this.players.includes(playerID) || this._newPlayers.includes(playerID)) {
       throw new Error('Player has already been added to this game!');
     }
@@ -376,12 +380,14 @@ export default class BlackjackGame {
     });
   }
 
-  public toModel(): BlackjackGameModel {
-    return {
-      hands: this.hands,
-      playerPoints: this.playerPoints,
-      playerBets: this.playerBets,
+  public toModel() {
+    const game = {
+      hands: Array.from(this.hands.values()),
+      playerPoints: Array.from(this.playerPoints.values()),
+      playerBets: Array.from(this.playerBets.values()),
       playerMoveIndex: this.playerMoveIndex,
     };
+    console.log('toModel Game: ', game);
+    return game;
   }
 }

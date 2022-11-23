@@ -104,9 +104,9 @@ export interface BlackjackArea {
 }
 
 export interface BlackjackGame {
-  hands: Map<string, Card[][]>;
-  playerPoints: Map<string, number>;
-  playerBets: Map<string, number[]>;
+  hands: Card[][][];
+  playerPoints: number[];
+  playerBets: number[][];
   playerMoveIndex: number;
 }
 

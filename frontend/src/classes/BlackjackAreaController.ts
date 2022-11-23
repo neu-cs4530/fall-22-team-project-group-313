@@ -18,8 +18,8 @@ export type BlackjackAreaEvents = {
   gameActionChange: (newAction: GameAction | undefined) => void;
   occupantsChange: (newOccupants: PlayerController[]) => void;
   gameOccupantsChange: (newGameOccupants: PlayerController[]) => void;
-  handsChange: (newHands: Map<string, Card[][]>) => void;
-  pointsChange: (newPoints: Map<string, number>) => void;
+  handsChange: (newHands: Card[][][]) => void;
+  pointsChange: (newPoints: number[]) => void;
 };
 
 /**
@@ -191,6 +191,17 @@ export function useBlackjackAreaOccupants(area: BlackjackAreaController): Player
   return occupants;
 }
 
+export function useBlackjackAreaGameOccupants(area: BlackjackAreaController): PlayerController[] {
+  const [gameOccupants, setGameOccupants] = useState(area.gameOccupants);
+  useEffect(() => {
+    area.addListener('gameOccupantsChange', setGameOccupants);
+    return () => {
+      area.removeListener('gameOccupantsChange', setGameOccupants);
+    };
+  }, [area]);
+  return gameOccupants;
+}
+
 /**
  * A react hook to retrieve the gameAction of a BlackjackAreaController.
  * If there is currently no gameAction defined, it will return undefined.
@@ -213,7 +224,7 @@ export function useBlackjackAreaGameAction(area: BlackjackAreaController): GameA
  *
  * This hook will re-render any components that use it when the set of occupants changes.
  */
-export function useAllHands(area: BlackjackAreaController): Map<string, Card[][]> {
+export function useAllHands(area: BlackjackAreaController): Card[][][] {
   const [allHands, setAllHands] = useState(area.game.hands);
   useEffect(() => {
     area.addListener('handsChange', setAllHands);
@@ -229,7 +240,7 @@ export function useAllHands(area: BlackjackAreaController): Map<string, Card[][]
  *
  * This hook will re-render any components that use it when the set of occupants changes.
  */
-export function usePlayerPoints(area: BlackjackAreaController): Map<string, number> {
+export function usePlayerPoints(area: BlackjackAreaController): number[] {
   const [playerPoints, setPlayerPoints] = useState(area.game.playerPoints);
   useEffect(() => {
     area.addListener('pointsChange', setPlayerPoints);

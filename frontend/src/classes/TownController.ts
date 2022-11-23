@@ -435,7 +435,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
      * events (@see ViewingAreaController and @see ConversationAreaController and @see BlackjackAreaController)
      */
     this._socket.on('interactableUpdate', interactable => {
-      console.log('interactableUpdate hit');
+      console.log('interactableUpdate hit in TownController');
       if (isConversationArea(interactable)) {
         const updatedConversationArea = this.conversationAreas.find(c => c.id === interactable.id);
         if (updatedConversationArea) {
@@ -455,7 +455,9 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
       } else if (isBlackjackArea(interactable)) {
         const updatedBlackjackArea = this.blackjackAreas.find(c => c.id === interactable.id);
         if (updatedBlackjackArea) {
-          console.log('blackjack update');
+          console.log('blackjack update in townController');
+          console.log('Old area: ', updatedBlackjackArea);
+          console.log('New Area: ', interactable);
           const emptyNow = updatedBlackjackArea.isEmpty();
           updatedBlackjackArea.gameAction = interactable.gameAction;
           updatedBlackjackArea.game = interactable.game;
@@ -660,9 +662,9 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
       return existingController;
     } else {
       const newController = new BlackjackAreaController(blackjackArea.name, {
-        hands: new Map<string, Card[][]>(),
-        playerPoints: new Map<string, number>(),
-        playerBets: new Map<string, number[]>(),
+        hands: [[[]]],
+        playerPoints: [],
+        playerBets: [[]],
         playerMoveIndex: 0,
       });
       this._blackjackAreasInternal.push(newController);

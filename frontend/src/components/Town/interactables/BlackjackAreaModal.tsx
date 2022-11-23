@@ -19,10 +19,14 @@ import {
 } from '@chakra-ui/react';
 import _ from 'lodash';
 import React, { useCallback, useEffect } from 'react';
-import { useAllHands } from '../../../classes/BlackjackAreaController';
+import {
+  useAllHands,
+  useBlackjackAreaGameOccupants,
+} from '../../../classes/BlackjackAreaController';
+import PlayerController from '../../../classes/PlayerController';
 import { useBlackjackAreaController } from '../../../classes/TownController';
 import useTownController from '../../../hooks/useTownController';
-import { GameAction } from '../../../types/CoveyTownSocket';
+import { GameAction, Card } from '../../../types/CoveyTownSocket';
 import BlackjackArea from './BlackjackArea';
 
 export default function BlackjackAreaModal({
@@ -89,7 +93,7 @@ export default function BlackjackAreaModal({
   //   }, [video, coveyTownController, viewingAreaController, toast]);
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  const Card = (props: { suit: string; value: string }) => {
+  const CreateCard = (props: { suit: string; value: string }) => {
     let suitConversion;
     let valueConversion;
 
@@ -139,7 +143,7 @@ export default function BlackjackAreaModal({
   };
 
   function printCard(value: string, suit: string) {
-    return <Card suit={suit} value={value} />;
+    return <CreateCard suit={suit} value={value} />;
   }
 
   function playerRow(player: string, cards: { value: string; suit: string }[], row: number) {
@@ -182,12 +186,12 @@ export default function BlackjackAreaModal({
     );
   }
 
-  function allHands(players: string[], hands: { value: string; suit: string }[][]) {
+  function allHands(players: string[], hands: Card[][][]) {
     console.log('Players', players);
     console.log('Hands', hands);
     return (
       <Grid h='200px' templateRows='repeat(25, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
-        {players.map((player: string) => {
+        {/* {players.map((player: string) => {
           {
             return playerRow(
               player,
@@ -200,7 +204,7 @@ export default function BlackjackAreaModal({
           { value: '9', suit: 'clubs' },
           { value: '5', suit: 'clubs' },
           { value: '7', suit: 'clubs' },
-        ])}
+        ])} */}
       </Grid>
     );
   }
@@ -287,8 +291,12 @@ export default function BlackjackAreaModal({
         </Button>
         <ModalBody hidden={gameNotStarted} pb={6}>
           {allHands(
-            Object.keys(useAllHands(blackjackAreaController)),
-            Object.values(useAllHands(blackjackAreaController)),
+            useBlackjackAreaGameOccupants(blackjackAreaController).map(
+              (player: PlayerController) => {
+                return player.userName;
+              },
+            ),
+            useAllHands(blackjackAreaController),
           )}
         </ModalBody>
         <ModalFooter hidden={gameNotStarted} justifyContent={'space-between'}>

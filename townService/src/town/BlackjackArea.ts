@@ -6,6 +6,7 @@ import {
   BoundingBox,
   BlackjackArea as BlackjackModel,
   TownEmitter,
+  BlackjackGame as BlackjackGameModel,
 } from '../types/CoveyTownSocket';
 import InteractableArea from './InteractableArea';
 
@@ -61,6 +62,11 @@ export default class BlackjackArea extends InteractableArea {
    * @param blackjackArea updated model
    */
   public updateModel(newModel: BlackjackModel) {
+    const gameOccupants = newModel.gameOccupantsByID;
+    const addedOccupants = gameOccupants.filter(id => this.gameOccupantsByID.indexOf(id) === -1); // Occupants added
+    addedOccupants.forEach(id => this.game.addPlayer(id));
+    const removedOccupants = this.gameOccupantsByID.filter(id => gameOccupants.indexOf(id) === -1); // Occupants removed
+    removedOccupants.forEach(id => this.game.removePlayer(id));
     const newAction = newModel.gameAction;
     if (this.gameAction?.index !== newAction?.index) {
       if (newAction?.playerID === 'DEALER') {
@@ -70,11 +76,8 @@ export default class BlackjackArea extends InteractableArea {
       }
       this.gameAction = newModel.gameAction;
     }
-    const gameOccupants = newModel.gameOccupantsByID;
-    const addedOccupants = gameOccupants.filter(id => this.gameOccupantsByID.indexOf(id) !== -1); // Occupants added
-    addedOccupants.forEach(id => this.game.addPlayer(id));
-    const removedOccupants = this.gameOccupantsByID.filter(id => gameOccupants.indexOf(id) === -1); // Occupants removed
-    removedOccupants.forEach(id => this.game.removePlayer(id));
+    console.log('Update Model: ', this.toModel());
+    this._emitAreaChanged();
   }
 
   /**
@@ -106,12 +109,13 @@ export default class BlackjackArea extends InteractableArea {
       throw new Error(`Malformed viewing area ${name}`);
     }
     const rect: BoundingBox = { x: mapObject.x, y: mapObject.y, width, height };
+    const game = new BlackjackGame([]);
     return new BlackjackArea(
       {
         id: name,
         occupantsByID: [],
         gameOccupantsByID: [],
-        game: new BlackjackGame([]),
+        game: game.toModel(),
         gameAction: { GameAction: 'gameStart', playerID: '-1', index: -1 },
       },
       rect,

@@ -108,7 +108,7 @@ export interface BlackjackGame {
   hands: Card[][][];
   playerPoints: number[];
   playerBets: number[][];
-  playerMoveIndex: number;
+  playerMoveID: string;
   players: string[];
   isStarted: boolean;
   dealerHand: Card[];

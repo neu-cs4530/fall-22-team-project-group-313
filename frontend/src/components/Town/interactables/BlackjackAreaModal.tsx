@@ -281,7 +281,7 @@ export default function BlackjackAreaModal({
             Bank: {game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]} points
           </Text>
           {wager(game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)])}
-          <HStack spacing={8}>
+          <HStack hidden={game.playerMoveID !== coveyTownController.ourPlayer.id} spacing={8}>
             <Button>
               {/* // onClick={() => {
               //   ;

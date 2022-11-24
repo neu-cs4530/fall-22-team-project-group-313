@@ -64,7 +64,7 @@ export default class BlackjackGame {
       throw new Error(`Too many players! Limit is ${this.PLAYERLIMIT}`);
     }
     this.players = playerIDs;
-    this.playerMoveIndex = 0;
+    this.playerMoveIndex = -1;
     this._numDecks = numDecks ?? 6;
     this._hands = new Map<string, Card[][]>();
     this._currentHandIndex = new Map<string, number>();
@@ -143,7 +143,7 @@ export default class BlackjackGame {
       this._handsAwaitingBet.set(id, 0);
     });
     this.gameInProgress = true;
-    // this._deal();
+    this.playerMoveIndex = -1;
   }
 
   /**
@@ -188,7 +188,8 @@ export default class BlackjackGame {
    * @param move the Blackjack move the player chooses
    */
   public playerMove(playerID: string, move: BlackjackMove): void {
-    if (playerID !== this.players[this.playerMoveIndex]) {
+    const isWager = (move as string).substring(0, 6) === 'Wager:';
+    if (!isWager && playerID !== this.players[this.playerMoveIndex]) {
       throw new Error('Wrong player moving!');
     }
     let turnOver = false;
@@ -251,12 +252,13 @@ export default class BlackjackGame {
         break;
       }
       default:
-        if ((move as string).substring(0, 6) === 'Wager:') {
+        if (isWager) {
           const wagerValue = +(move as string).slice(6);
           this.setBet(playerID, wagerValue);
           const nonBetters = this.players.find(id => this._handsAwaitingBet.get(id) !== undefined);
           if (!nonBetters) {
             this._deal();
+            this.playerMoveIndex = 0;
           }
         } else {
           throw new Error('Unknown Blackjack move');
@@ -399,7 +401,7 @@ export default class BlackjackGame {
       hands: Array.from(this.hands.values()),
       playerPoints: Array.from(this.playerPoints.values()),
       playerBets: Array.from(this.playerBets.values()),
-      playerMoveIndex: this.playerMoveIndex,
+      playerMoveID: this.playerMoveIndex === -1 ? '' : this.players[this.playerMoveIndex],
       players: this.players,
       isStarted: this.gameInProgress,
       dealerHand: this._dealerHand,

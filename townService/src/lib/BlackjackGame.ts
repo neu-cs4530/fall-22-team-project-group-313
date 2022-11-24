@@ -253,7 +253,6 @@ export default class BlackjackGame {
         break;
       }
       case BlackjackMove.Leave: {
-        console.log('WE MADE IT');
         if (this._players.length === 1 && this._newPlayers.length === 0) {
           this._players = [];
           this.playerMoveIndex = -1;
@@ -266,7 +265,6 @@ export default class BlackjackGame {
           this._shouldShuffle = true;
           this._results = [];
           this.gameInProgress = false;
-          console.log('I LEFT: ', this._players);
           break;
         } else {
           // TODO
@@ -291,15 +289,26 @@ export default class BlackjackGame {
           if (!nonBetters) {
             this._deal();
             this.playerMoveIndex = 0;
+            if (this.handValues(this._players[0])[0] === 21) {
+              this.playerMove(this._players[0], BlackjackMove.Stay);
+            }
           }
         } else {
           throw new Error('Unknown Blackjack move');
         }
     }
-    this.playerMoveIndex += turnOver ? 1 : 0;
 
-    if (this.playerMoveIndex >= this._players.length) {
-      this.playDealerHand();
+    if (move !== 'Leave') {
+      this.playerMoveIndex += turnOver ? 1 : 0;
+      if (turnOver && this.playerMoveIndex < this._players.length) {
+        if (this.handValues(this._players[this.playerMoveIndex])[0] === 21) {
+          this.playerMove(this._players[this.playerMoveIndex], BlackjackMove.Stay);
+        }
+      }
+
+      if (this.playerMoveIndex >= this._players.length) {
+        this.playDealerHand();
+      }
     }
   }
 

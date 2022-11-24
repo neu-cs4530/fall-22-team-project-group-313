@@ -331,15 +331,26 @@ export default function BlackjackAreaModal({
                     ? 0
                     : blackjackAreaController.gameAction.index + 1,
                   coveyTownController.ourPlayer.id,
-                  `Stay`,
+                  'Stay',
                 );
                 coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
               }}>
               Stay
             </Button>
             <Button>Split</Button>
-            <Button>Double</Button>
-            <Button>Surrender</Button>
+            <Button
+              onClick={() => {
+                updateGameModel(
+                  blackjackAreaController.gameAction == undefined
+                    ? 0
+                    : blackjackAreaController.gameAction.index + 1,
+                  coveyTownController.ourPlayer.id,
+                  'Double',
+                );
+                coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+              }}>
+              Double
+            </Button>
           </HStack>
         </ModalFooter>
       </ModalContent>

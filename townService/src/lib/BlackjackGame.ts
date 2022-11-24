@@ -251,7 +251,16 @@ export default class BlackjackGame {
         break;
       }
       default:
-        throw new Error('Unknown Blackjack move');
+        if ((move as string).substring(0, 6) === 'Wager:') {
+          const wagerValue = +(move as string).slice(6);
+          this.setBet(playerID, wagerValue);
+          const nonBetters = this.players.find(id => this._handsAwaitingBet.get(id) !== undefined);
+          if (!nonBetters) {
+            this._deal();
+          }
+        } else {
+          throw new Error('Unknown Blackjack move');
+        }
     }
     this.playerMoveIndex += turnOver ? 1 : 0;
   }

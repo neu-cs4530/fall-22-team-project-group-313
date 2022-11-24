@@ -1,8 +1,8 @@
 export enum Suit {
-  S = 'S',
-  H = 'H',
-  D = 'D',
-  C = 'C',
+  S = 'spades',
+  H = 'hearts',
+  D = 'diamonds',
+  C = 'clubs',
 }
 
 // export enum Rank {
@@ -38,19 +38,19 @@ export default class Card {
     this.suit = suit;
     this.rank = rank;
     this.isFaceUp = true;
-    this._rankToValue.set('Ace', 11);
-    this._rankToValue.set('Two', 2);
-    this._rankToValue.set('Three', 3);
-    this._rankToValue.set('Four', 4);
-    this._rankToValue.set('Five', 5);
-    this._rankToValue.set('Six', 6);
-    this._rankToValue.set('Seven', 7);
-    this._rankToValue.set('Eight', 8);
-    this._rankToValue.set('Nine', 9);
-    this._rankToValue.set('Ten', 10);
-    this._rankToValue.set('Jack', 10);
-    this._rankToValue.set('Queen', 10);
-    this._rankToValue.set('King', 10);
+    this._rankToValue.set('A', 11);
+    this._rankToValue.set('2', 2);
+    this._rankToValue.set('3', 3);
+    this._rankToValue.set('4', 4);
+    this._rankToValue.set('5', 5);
+    this._rankToValue.set('6', 6);
+    this._rankToValue.set('7', 7);
+    this._rankToValue.set('8', 8);
+    this._rankToValue.set('9', 9);
+    this._rankToValue.set('10', 10);
+    this._rankToValue.set('J', 10);
+    this._rankToValue.set('Q', 10);
+    this._rankToValue.set('K', 10);
   }
 
   public get value() {
@@ -59,7 +59,7 @@ export default class Card {
 
   public static getDeck(): Card[] {
     const deck = new Array<Card>();
-    const card = new Card(Suit.C, 'Ace');
+    const card = new Card(Suit.C, 'A');
     const ranks = Array.from(card._rankToValue.keys());
     ranks.forEach(rank => {
       Object.keys(Suit).forEach(suit => {

@@ -402,6 +402,7 @@ export default class BlackjackGame {
       playerMoveIndex: this.playerMoveIndex,
       players: this.players,
       isStarted: this.gameInProgress,
+      dealerHand: this._dealerHand,
     };
     return game;
   }

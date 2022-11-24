@@ -15,10 +15,6 @@ import {
   NumberInput,
   NumberInputField,
   NumberInputStepper,
-  Slider,
-  SliderFilledTrack,
-  SliderThumb,
-  SliderTrack,
   Text,
 } from '@chakra-ui/react';
 import _, { indexOf } from 'lodash';
@@ -153,6 +149,7 @@ export default function BlackjackAreaModal({
   }
 
   function printCard(value: string, suit: string) {
+    console.log('SUIT: ', suit);
     return <CreateCard suit={suit} value={value} />;
   }
 
@@ -164,7 +161,7 @@ export default function BlackjackAreaModal({
             {coveyTownController.players.find(occupant => occupant.id === player)?.userName}
           </Text>
           {cards.map(card => {
-            return printCard('2', card.suit);
+            return printCard(card.rank, card.suit);
           })}
           {/* <Text> {totalValue} </Text> */}
         </HStack>
@@ -172,21 +169,16 @@ export default function BlackjackAreaModal({
     );
   }
 
-  function dealer(cards: { value: string; suit: string }[]) {
-    let totalValue = 0;
-
-    for (const card of cards) {
-      const val = +card.value;
-      totalValue += val;
-    }
+  function dealer(cards: Card[]) {
+    const faceUpCards = cards.filter(card => card.isFaceUp);
     return (
       <GridItem colStart={7} rowStart={9} rowSpan={2} colSpan={1}>
         <HStack spacing={10}>
           <Text> Dealer </Text>
-          {cards.map(card => {
-            return printCard(card.value, card.suit);
+          {faceUpCards.map(card => {
+            return printCard(card.rank, card.suit);
           })}
-          <Text> {totalValue} </Text>
+          {/* <Text> {totalValue} </Text> */}
         </HStack>
       </GridItem>
     );
@@ -204,11 +196,7 @@ export default function BlackjackAreaModal({
             );
           }
         })}
-        {dealer([
-          { value: '9', suit: 'clubs' },
-          { value: '5', suit: 'clubs' },
-          { value: '7', suit: 'clubs' },
-        ])}
+        {dealer(game.dealerHand)}
       </Grid>
     );
   }
@@ -242,7 +230,7 @@ export default function BlackjackAreaModal({
               `Wager:${wagerValue}`,
             );
             setWagerHide(true);
-            // coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+            coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
           }}>
           Submit
         </Button>
@@ -263,11 +251,11 @@ export default function BlackjackAreaModal({
       isOpen={isOpen}
       onClose={() => {
         closeModal();
-        const toccupants = blackjackAreaController.occupants;
-        blackjackAreaController.occupants = toccupants.filter(
+        const toccupants = blackjackAreaController.gameOccupants;
+        blackjackAreaController.gameOccupants = toccupants.filter(
           player => player.id !== coveyTownController.ourPlayer.id,
         );
-        console.log('Leave: ', blackjackAreaController.occupants);
+        console.log('Leave: ', blackjackAreaController.gameOccupants);
         coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
         coveyTownController.unPause();
       }}

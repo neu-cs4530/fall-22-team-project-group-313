@@ -77,8 +77,8 @@
 
 .card {
   display: flex;
-  width: 30px;
-  height: 50px;
+  width: 42px;
+  height: 70px;
   background-color: #fff;
   border-radius: 8px;
   border: 1px solid black;
@@ -95,11 +95,11 @@
 }
 
 .card-value {
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .card-suit {
-  font-size: 4px;
+  font-size: 12px;
 }
 
 .card-tl {

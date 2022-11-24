@@ -42,6 +42,12 @@ export default function BlackjackAreaModal({
   const [wagerHide, setWagerHide] = useState(false);
 
   useEffect(() => {
+    if (blackjackAreaController.gameAction?.GameAction === 'EndGame') {
+      setWagerHide(false);
+    }
+  }, [blackjackAreaController.gameAction]);
+
+  useEffect(() => {
     if (isOpen) {
       coveyTownController.pause();
     } else {
@@ -149,7 +155,6 @@ export default function BlackjackAreaModal({
   }
 
   function printCard(value: string, suit: string) {
-    console.log('SUIT: ', suit);
     return <CreateCard suit={suit} value={value} />;
   }
 
@@ -209,8 +214,8 @@ export default function BlackjackAreaModal({
   function outputWager(minPoints: number, maxPoints: number) {
     return (
       <HStack>
-        <Text hidden={wagerHide}>Wager:</Text>
         <Text hidden={!wagerHide}>Current Wager: {wagerValue}</Text>
+        <Text hidden={wagerHide}>Wager:</Text>
         <NumberInput
           defaultValue={minPoints}
           min={minPoints}
@@ -250,7 +255,6 @@ export default function BlackjackAreaModal({
     }
   }
 
-  console.log(game.playerPoints);
   return (
     <Modal
       isOpen={isOpen}
@@ -260,7 +264,6 @@ export default function BlackjackAreaModal({
         blackjackAreaController.gameOccupants = toccupants.filter(
           player => player.id !== coveyTownController.ourPlayer.id,
         );
-        console.log('Leave: ', blackjackAreaController.gameOccupants);
         coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
         coveyTownController.unPause();
       }}
@@ -274,7 +277,6 @@ export default function BlackjackAreaModal({
           onClick={() => {
             updateGameModel(0, 'DEALER', 'StartGame');
             coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
-            setWagerHide(false);
           }}>
           Click to Start Game (ADD PLAYER NAMES TO LOBBY)
         </Button>
@@ -300,7 +302,6 @@ export default function BlackjackAreaModal({
                   'EndGame',
                 );
                 coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
-                setWagerHide(!wagerHide);
               }}>
               Click this button to start a new hand!
             </Button>

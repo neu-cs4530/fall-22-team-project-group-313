@@ -194,6 +194,8 @@ export default function BlackjackAreaModal({
   }
 
   function allHands(players: string[], hands: Card[][][]) {
+    console.log('PLAYERS: ', players);
+    console.log('HANDS: ', hands);
     return (
       <Grid h='200px' templateRows='repeat(25, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
         {players.map((player: string) => {

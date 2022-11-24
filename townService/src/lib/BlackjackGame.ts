@@ -268,7 +268,8 @@ export default class BlackjackGame {
           break;
         } else {
           // TODO
-          this._players.slice(this._players.indexOf(playerID), 1);
+          const newPlayers = this._players.filter(id => id !== playerID);
+          this._players = newPlayers;
           this._hands.delete(playerID);
           this._currentHandIndex.delete(playerID);
           this._handsAwaitingBet.delete(playerID);

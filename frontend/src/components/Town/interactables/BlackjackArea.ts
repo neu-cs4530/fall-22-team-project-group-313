@@ -110,13 +110,16 @@ export default class BlackjackArea extends Interactable {
     this._labelText?.setVisible(false);
     this._isInteracting = true;
     const bjController = this.townController.getBlackjackAreaController(this);
-    console.log('INTERACT BEFORE: ', bjController.gameOccupants);
     if (!bjController.gameOccupants.find(player => player.id == this.townController.ourPlayer.id)) {
       const occupants = bjController.gameOccupants;
       occupants.push(this.townController.ourPlayer);
       bjController.gameOccupants = occupants;
     }
-    console.log('INTERACT DONE: ', bjController.gameOccupants);
+    bjController.gameAction = {
+      index: bjController.gameAction == undefined ? 0 : bjController.gameAction.index + 1,
+      playerID: this.townController.ourPlayer.id,
+      GameAction: 'Join',
+    };
     this.townController.emitBlackjackAreaUpdate(bjController);
   }
 }

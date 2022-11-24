@@ -7,9 +7,10 @@ import Card from './Card';
 export enum BlackjackMove {
   Hit = 'Hit',
   Stay = 'Stay',
-  Leave = 'Surrender',
+  Leave = 'Leave',
   Split = 'Split',
   Double = 'Double',
+  Join = 'Join',
 }
 
 export enum DealerMove {
@@ -61,10 +62,7 @@ export default class BlackjackGame {
 
   public _results: string[];
 
-  constructor(playerIDs: string[], numDecks?: number, shuffle?: boolean) {
-    if (playerIDs.length > this.PLAYERLIMIT) {
-      throw new Error(`Too many players! Limit is ${this.PLAYERLIMIT}`);
-    }
+  constructor(numDecks?: number, shuffle?: boolean) {
     this._players = [];
     this.playerMoveIndex = -1;
     this._numDecks = numDecks ?? 6;
@@ -156,6 +154,8 @@ export default class BlackjackGame {
    * @param playerID Player ID to be joining
    */
   public addPlayer(playerID: string) {
+    console.log('WHY: ', this._players);
+    console.log('HUH: ', this._newPlayers);
     if (this._players.includes(playerID) || this._newPlayers.includes(playerID)) {
       throw new Error('Player has already been added to this game!');
     }
@@ -192,8 +192,16 @@ export default class BlackjackGame {
    * @param move the Blackjack move the player chooses
    */
   public playerMove(playerID: string, move: BlackjackMove): void {
+    console.log('PLAYER MOVE: ', move);
+    console.log('MOVE INDEX: ', this.playerMoveIndex);
+    console.log('PLAYERS: ', this._players);
     const isWager = (move as string).substring(0, 6) === 'Wager:';
-    if (!isWager && playerID !== this._players[this.playerMoveIndex]) {
+    if (
+      !isWager &&
+      playerID !== this._players[this.playerMoveIndex] &&
+      move !== 'Leave' &&
+      move !== 'Join'
+    ) {
       throw new Error('Wrong player moving!');
     }
     let turnOver = false;
@@ -245,14 +253,34 @@ export default class BlackjackGame {
         break;
       }
       case BlackjackMove.Leave: {
-        // TODO
-        this._players.slice(this._players.indexOf(playerID), 1);
-        this._hands.delete(playerID);
-        this._currentHandIndex.delete(playerID);
-        this._handsAwaitingBet.delete(playerID);
-        this._playerBets.delete(playerID);
-        // this._playerPoints.delete(playerID);
-        // Don't say turnOver = true as index should autocompensate
+        console.log('WE MADE IT');
+        if (this._players.length === 1 && this._newPlayers.length === 0) {
+          this._players = [];
+          this.playerMoveIndex = -1;
+          this._hands = new Map<string, Card[][]>();
+          this._currentHandIndex = new Map<string, number>();
+          this._playerBets = new Map<string, number[]>();
+          this._handsAwaitingBet = new Map<string, number | undefined>();
+          this.playerPoints = new Map<string, number>();
+          this._newPlayers = [];
+          this._shouldShuffle = true;
+          this._results = [];
+          this.gameInProgress = false;
+          console.log('I LEFT: ', this._players);
+          break;
+        } else {
+          // TODO
+          this._players.slice(this._players.indexOf(playerID), 1);
+          this._hands.delete(playerID);
+          this._currentHandIndex.delete(playerID);
+          this._handsAwaitingBet.delete(playerID);
+          this._playerBets.delete(playerID);
+          // this._playerPoints.delete(playerID);
+          // Don't say turnOver = true as index should autocompensate
+          break;
+        }
+      }
+      case BlackjackMove.Join: {
         break;
       }
       default:

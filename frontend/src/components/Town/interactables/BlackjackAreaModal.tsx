@@ -260,9 +260,12 @@ export default function BlackjackAreaModal({
       isOpen={isOpen}
       onClose={() => {
         closeModal();
-        const toccupants = blackjackAreaController.gameOccupants;
-        blackjackAreaController.gameOccupants = toccupants.filter(
-          player => player.id !== coveyTownController.ourPlayer.id,
+        updateGameModel(
+          blackjackAreaController.gameAction == undefined
+            ? 0
+            : blackjackAreaController.gameAction.index + 1,
+          coveyTownController.ourPlayer.id,
+          'Leave',
         );
         coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
         coveyTownController.unPause();

@@ -18,8 +18,7 @@ export type BlackjackAreaEvents = {
   gameActionChange: (newAction: GameAction | undefined) => void;
   occupantsChange: (newOccupants: PlayerController[]) => void;
   gameOccupantsChange: (newGameOccupants: PlayerController[]) => void;
-  handsChange: (newHands: Card[][][]) => void;
-  pointsChange: (newPoints: number[]) => void;
+  gameChange: (game: BlackjackGameModel) => void;
 };
 
 /**
@@ -62,12 +61,8 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
   }
 
   set game(game: BlackjackGameModel) {
-    console.log('Old Game', this._game);
-    console.log('New Game', game);
-    this._game.hands = game.hands;
-    this.emit('handsChange', game.hands);
-    this._game.playerPoints = game.playerPoints;
-    this.emit('pointsChange', game.playerPoints);
+    this._game = game;
+    this.emit('gameChange', game);
     // if (
     //   _.xor(Object.keys(this._game.hands), Object.keys(game.hands)).length > 0 ||
     //   _.xor(Object.values(this._game.hands), Object.values(game.hands)).length > 0
@@ -194,7 +189,13 @@ export function useBlackjackAreaOccupants(area: BlackjackAreaController): Player
 export function useBlackjackAreaGameOccupants(area: BlackjackAreaController): PlayerController[] {
   const [gameOccupants, setGameOccupants] = useState(area.gameOccupants);
   useEffect(() => {
+    const setGameOccs = (players: PlayerController[], hands: Card[][][]) => {
+      if (players.length === hands.length) {
+        setGameOccupants(players);
+      }
+    };
     area.addListener('gameOccupantsChange', setGameOccupants);
+    setGameOccs(area.gameOccupants, area.game.hands);
     return () => {
       area.removeListener('gameOccupantsChange', setGameOccupants);
     };
@@ -219,34 +220,13 @@ export function useBlackjackAreaGameAction(area: BlackjackAreaController): GameA
   return gameAction;
 }
 
-/**
- * A react hook to retrieve the hands of a BlackjackAreaController, returning an array of PlayerController.
- *
- * This hook will re-render any components that use it when the set of occupants changes.
- */
-export function useAllHands(area: BlackjackAreaController): Card[][][] {
-  const [allHands, setAllHands] = useState(area.game.hands);
+export function useGame(area: BlackjackAreaController): BlackjackGameModel {
+  const [game, setGame] = useState(area.game);
   useEffect(() => {
-    area.addListener('handsChange', setAllHands);
+    area.addListener('gameChange', setGame);
     return () => {
-      area.removeListener('handsChange', setAllHands);
+      area.removeListener('gameChange', setGame);
     };
   }, [area]);
-  return allHands;
-}
-
-/**
- * A react hook to retrieve the player points of a BlackjackAreaController, returning an array of PlayerController.
- *
- * This hook will re-render any components that use it when the set of occupants changes.
- */
-export function usePlayerPoints(area: BlackjackAreaController): number[] {
-  const [playerPoints, setPlayerPoints] = useState(area.game.playerPoints);
-  useEffect(() => {
-    area.addListener('pointsChange', setPlayerPoints);
-    return () => {
-      area.removeListener('pointsChange', setPlayerPoints);
-    };
-  }, [area]);
-  return playerPoints;
+  return game;
 }

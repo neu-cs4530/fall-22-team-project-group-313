@@ -19,10 +19,7 @@ import {
 } from '@chakra-ui/react';
 import _ from 'lodash';
 import React, { useCallback, useEffect } from 'react';
-import {
-  useAllHands,
-  useBlackjackAreaGameOccupants,
-} from '../../../classes/BlackjackAreaController';
+import { useBlackjackAreaOccupants, useGame } from '../../../classes/BlackjackAreaController';
 import PlayerController from '../../../classes/PlayerController';
 import { useBlackjackAreaController } from '../../../classes/TownController';
 import useTownController from '../../../hooks/useTownController';
@@ -40,7 +37,7 @@ export default function BlackjackAreaModal({
 }): JSX.Element {
   const coveyTownController = useTownController();
   const blackjackAreaController = useBlackjackAreaController(blackjackArea?.name);
-  const [gameNotStarted, setGameNotStarted] = React.useState(true);
+  const game = useGame(blackjackAreaController);
   // const [sliderValue, setSliderValue] = React.useState(5);
   // const [testText, setTestText] = useState<number>(0);
 
@@ -146,21 +143,23 @@ export default function BlackjackAreaModal({
     return <CreateCard suit={suit} value={value} />;
   }
 
-  function playerRow(player: string, cards: { value: string; suit: string }[], row: number) {
-    let totalValue = 0;
+  function playerRow(player: string, cards: Card[], row: number) {
+    // let totalValue = 0;
 
-    for (const card of cards) {
-      const val = +card.value;
-      totalValue += val;
-    }
+    // for (const card of cards) {
+    //   const val = +card.value;
+    //   totalValue += val;
+    // }
     return (
       <GridItem colStart={1} rowStart={row} rowSpan={7} colSpan={1}>
         <HStack spacing={10}>
-          <Text> {player} </Text>
+          <Text>
+            {coveyTownController.players.find(occupant => occupant.id === player)?.userName}
+          </Text>
           {cards.map(card => {
-            return printCard(card.value, card.suit);
+            return printCard('2', card.suit);
           })}
-          <Text> {totalValue} </Text>
+          {/* <Text> {totalValue} </Text> */}
         </HStack>
       </GridItem>
     );
@@ -187,15 +186,13 @@ export default function BlackjackAreaModal({
   }
 
   function allHands(players: string[], hands: Card[][][]) {
-    console.log('Players', players);
-    console.log('Hands', hands);
     return (
       <Grid h='200px' templateRows='repeat(25, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
-        {/* {players.map((player: string) => {
+        {players.map((player: string) => {
           {
             return playerRow(
               player,
-              hands[players.indexOf(player)],
+              hands[players.indexOf(player)][0],
               players.indexOf(player) * 4 + 2,
             );
           }
@@ -204,7 +201,7 @@ export default function BlackjackAreaModal({
           { value: '9', suit: 'clubs' },
           { value: '5', suit: 'clubs' },
           { value: '7', suit: 'clubs' },
-        ])} */}
+        ])}
       </Grid>
     );
   }
@@ -265,14 +262,13 @@ export default function BlackjackAreaModal({
       isOpen={isOpen}
       onClose={() => {
         closeModal();
-        const occupants = blackjackAreaController.occupants;
-        blackjackAreaController.occupants = occupants.filter(
-          player => player.id !== coveyTownController.ourPlayer.id,
-        );
-        coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+        // const toccupants = blackjackAreaController.occupants;
+        // blackjackAreaController.occupants = toccupants.filter(
+        //   player => player.id !== coveyTownController.ourPlayer.id,
+        // );
+        // console.log('Leave: ', blackjackAreaController.occupants);
+        // coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
         coveyTownController.unPause();
-        console.log(blackjackAreaController);
-        console.log(coveyTownController);
       }}
       size='full'>
       <ModalOverlay />
@@ -280,26 +276,26 @@ export default function BlackjackAreaModal({
         <ModalHeader>BlackJackArea </ModalHeader>
         <ModalCloseButton />
         <Button
-          hidden={!gameNotStarted}
+          hidden={game.isStarted}
           onClick={() => {
-            addPlayersToGame();
+            // addPlayersToGame();
             updateGameModel(0, 'DEALER', 'StartGame');
             coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
-            setGameNotStarted(false);
           }}>
           Click to Start Game (ADD PLAYER NAMES TO LOBBY)
         </Button>
-        <ModalBody hidden={gameNotStarted} pb={6}>
-          {allHands(
+        <ModalBody hidden={!game.isStarted} pb={6}>
+          {allHands(game.players, game.hands)}
+          {/* {allHands(
             useBlackjackAreaGameOccupants(blackjackAreaController).map(
               (player: PlayerController) => {
                 return player.userName;
               },
             ),
             useAllHands(blackjackAreaController),
-          )}
+          )} */}
         </ModalBody>
-        <ModalFooter hidden={gameNotStarted} justifyContent={'space-between'}>
+        <ModalFooter hidden={!game.isStarted} justifyContent={'space-between'}>
           <Text className='pull-left'>{coveyTownController.ourPlayer.userName}</Text>
           {wager(25)}
           <HStack spacing={8}>

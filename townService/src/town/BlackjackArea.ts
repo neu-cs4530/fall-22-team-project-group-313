@@ -62,11 +62,12 @@ export default class BlackjackArea extends InteractableArea {
    * @param blackjackArea updated model
    */
   public updateModel(newModel: BlackjackModel) {
-    const occupants = newModel.occupantsByID;
-    const addedOccupants = occupants.filter(id => this.occupantsByID.indexOf(id) === -1); // Occupants added
+    const occupants = newModel.gameOccupantsByID;
+    const addedOccupants = occupants.filter(id => this.gameOccupantsByID.indexOf(id) === -1); // Occupants added
     addedOccupants.forEach(id => this.game.addPlayer(id));
-    const removedOccupants = this.occupantsByID.filter(id => occupants.indexOf(id) === -1); // Occupants removed
+    const removedOccupants = this.gameOccupantsByID.filter(id => occupants.indexOf(id) === -1); // Occupants removed
     removedOccupants.forEach(id => this.game.removePlayer(id));
+    this.gameOccupantsByID = newModel.gameOccupantsByID;
     const newAction = newModel.gameAction;
     if (this.gameAction?.index !== newAction?.index) {
       if (newAction?.playerID === 'DEALER') {

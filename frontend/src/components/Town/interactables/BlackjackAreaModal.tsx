@@ -286,13 +286,32 @@ export default function BlackjackAreaModal({
           </Text>
           {wager(game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)])}
           <HStack hidden={game.playerMoveID !== coveyTownController.ourPlayer.id} spacing={8}>
-            <Button>
-              {/* // onClick={() => {
-              //   ;
-              // }}> */}
+            <Button
+              onClick={() => {
+                updateGameModel(
+                  blackjackAreaController.gameAction == undefined
+                    ? 0
+                    : blackjackAreaController.gameAction.index + 1,
+                  coveyTownController.ourPlayer.id,
+                  `Hit`,
+                );
+                coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+              }}>
               Hit
             </Button>
-            <Button>Stay</Button>
+            <Button
+              onClick={() => {
+                updateGameModel(
+                  blackjackAreaController.gameAction == undefined
+                    ? 0
+                    : blackjackAreaController.gameAction.index + 1,
+                  coveyTownController.ourPlayer.id,
+                  `Stay`,
+                );
+                coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+              }}>
+              Stay
+            </Button>
             <Button>Split</Button>
             <Button>Double</Button>
             <Button>Surrender</Button>

@@ -265,6 +265,10 @@ export default class BlackjackGame {
         }
     }
     this.playerMoveIndex += turnOver ? 1 : 0;
+
+    if (this.playerMoveIndex >= this.players.length) {
+      this.playDealerHand();
+    }
   }
 
   public dealerAction(move: DealerMove) {
@@ -312,14 +316,16 @@ export default class BlackjackGame {
     if (this.playerMoveIndex < this.players.length) {
       throw new Error('Not the dealers turn!');
     }
+    this.dealerHand[1].isFaceUp = true;
     let val = +this.handValues('dealer').slice(-2);
     while (val < 17) {
       const nextCard = this._deck.pop() as Card;
       this._dealerHand.push(nextCard);
-      val += nextCard.value === 11 && val < 11 ? 11 : nextCard.value;
+      // val += nextCard.value === 11 && val < 11 ? 11 : nextCard.value;
+      val = +this.handValues('dealer');
     }
     this._handleBets();
-    this.gameInProgress = false;
+    // this.gameInProgress = false;
   }
 
   /**
@@ -384,12 +390,12 @@ export default class BlackjackGame {
       const bets = this._playerBets.get(id) as number[];
       let points = this.playerPoints.get(id) as number;
       handVals.forEach((val, index) => {
-        if (val > 21 || val < dealerHandVal) {
+        if (val > 21 || (val < dealerHandVal && dealerHandVal <= 21)) {
           // TODO: lose
           points -= bets[index];
-        } else if (val > dealerHandVal) {
+        } else if (val > dealerHandVal || dealerHandVal > 21) {
           // TODO: win
-          points += bets[index] * 1.5; // TODO: Check if blackjack
+          points += bets[index]; // TODO: Check if blackjack
         }
       });
       this.playerPoints.set(id, points);

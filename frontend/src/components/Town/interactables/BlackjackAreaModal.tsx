@@ -15,10 +15,14 @@ import {
   NumberInput,
   NumberInputField,
   NumberInputStepper,
+  Slider,
+  SliderFilledTrack,
+  SliderThumb,
+  SliderTrack,
   Text,
 } from '@chakra-ui/react';
-import _ from 'lodash';
-import React, { useCallback, useEffect } from 'react';
+import _, { indexOf } from 'lodash';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useBlackjackAreaOccupants, useGame } from '../../../classes/BlackjackAreaController';
 import PlayerController from '../../../classes/PlayerController';
 import { useBlackjackAreaController } from '../../../classes/TownController';
@@ -38,8 +42,8 @@ export default function BlackjackAreaModal({
   const coveyTownController = useTownController();
   const blackjackAreaController = useBlackjackAreaController(blackjackArea?.name);
   const game = useGame(blackjackAreaController);
-  // const [sliderValue, setSliderValue] = React.useState(5);
-  // const [testText, setTestText] = useState<number>(0);
+  const [wagerValue, setWagerValue] = useState(5);
+  const [wagerHide, setWagerHide] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -139,17 +143,20 @@ export default function BlackjackAreaModal({
     }
   };
 
+  function updateGameModel(index: number, player: string, action: string) {
+    const a: GameAction = {
+      index: index,
+      GameAction: action,
+      playerID: player,
+    };
+    blackjackAreaController.gameAction = a;
+  }
+
   function printCard(value: string, suit: string) {
     return <CreateCard suit={suit} value={value} />;
   }
 
   function playerRow(player: string, cards: Card[], row: number) {
-    // let totalValue = 0;
-
-    // for (const card of cards) {
-    //   const val = +card.value;
-    //   totalValue += val;
-    // }
     return (
       <GridItem colStart={1} rowStart={row} rowSpan={7} colSpan={1}>
         <HStack spacing={10}>
@@ -192,7 +199,7 @@ export default function BlackjackAreaModal({
           {
             return playerRow(
               player,
-              hands[players.indexOf(player)][0],
+              hands.length === 0 ? [] : hands[players.indexOf(player)][0],
               players.indexOf(player) * 4 + 2,
             );
           }
@@ -209,65 +216,59 @@ export default function BlackjackAreaModal({
   function outputWager(minPoints: number, maxPoints: number) {
     return (
       <HStack>
-        <Text>Wager:</Text>
-        <NumberInput defaultValue={minPoints} min={minPoints} max={maxPoints}>
+        <Text hidden={wagerHide}>Wager:</Text>
+        <Text hidden={!wagerHide}>Current Wager: {wagerValue}</Text>
+        <NumberInput
+          defaultValue={minPoints}
+          min={minPoints}
+          max={maxPoints}
+          value={wagerValue}
+          hidden={wagerHide}
+          onChange={(value: string) => setWagerValue(value as unknown as number)}>
           <NumberInputField />
           <NumberInputStepper>
             <NumberIncrementStepper />
             <NumberDecrementStepper />
           </NumberInputStepper>
         </NumberInput>
-        <Button>Submit</Button>
+        <Button
+          hidden={wagerHide}
+          onClick={() => {
+            updateGameModel(
+              blackjackAreaController.gameAction == undefined
+                ? 0
+                : blackjackAreaController.gameAction.index + 1,
+              coveyTownController.ourPlayer.id,
+              `Wager:${wagerValue}`,
+            );
+            setWagerHide(true);
+            // coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+          }}>
+          Submit
+        </Button>
       </HStack>
     );
   }
 
   function wager(points: number) {
-    if (points <= 25) return outputWager(1, points);
-    else return outputWager(Math.trunc(points * 0.05), Math.trunc(points * 0.25));
-  }
-
-  function addPlayersToGame() {
-    if (
-      !blackjackAreaController.occupants.find(
-        player => player.id == coveyTownController.ourPlayer.id,
-      )
-    ) {
-      const occupants = blackjackAreaController.occupants;
-      occupants.push(coveyTownController.ourPlayer);
-      blackjackAreaController.occupants = occupants;
-      coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
-    }
-    const lobbyPlayers = _.xor(
-      blackjackAreaController.occupants,
-      blackjackAreaController.gameOccupants,
-    );
-
-    if (lobbyPlayers.length > 0) {
-      for (const player of lobbyPlayers) blackjackAreaController.gameOccupants.push(player);
+    if (game.isStarted) {
+      if (points <= 25) return outputWager(1, points);
+      else return outputWager(Math.trunc(points * 0.05), Math.trunc(points * 0.25));
     }
   }
 
-  function updateGameModel(index: number, player: string, action: string) {
-    const a: GameAction = {
-      index: index,
-      GameAction: action,
-      playerID: player,
-    };
-    blackjackAreaController.gameAction = a;
-  }
-
+  console.log(game.playerPoints);
   return (
     <Modal
       isOpen={isOpen}
       onClose={() => {
         closeModal();
-        // const toccupants = blackjackAreaController.occupants;
-        // blackjackAreaController.occupants = toccupants.filter(
-        //   player => player.id !== coveyTownController.ourPlayer.id,
-        // );
-        // console.log('Leave: ', blackjackAreaController.occupants);
-        // coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+        const toccupants = blackjackAreaController.occupants;
+        blackjackAreaController.occupants = toccupants.filter(
+          player => player.id !== coveyTownController.ourPlayer.id,
+        );
+        console.log('Leave: ', blackjackAreaController.occupants);
+        coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
         coveyTownController.unPause();
       }}
       size='full'>
@@ -278,26 +279,20 @@ export default function BlackjackAreaModal({
         <Button
           hidden={game.isStarted}
           onClick={() => {
-            // addPlayersToGame();
             updateGameModel(0, 'DEALER', 'StartGame');
             coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+            setWagerHide(false);
           }}>
           Click to Start Game (ADD PLAYER NAMES TO LOBBY)
         </Button>
         <ModalBody hidden={!game.isStarted} pb={6}>
           {allHands(game.players, game.hands)}
-          {/* {allHands(
-            useBlackjackAreaGameOccupants(blackjackAreaController).map(
-              (player: PlayerController) => {
-                return player.userName;
-              },
-            ),
-            useAllHands(blackjackAreaController),
-          )} */}
         </ModalBody>
         <ModalFooter hidden={!game.isStarted} justifyContent={'space-between'}>
-          <Text className='pull-left'>{coveyTownController.ourPlayer.userName}</Text>
-          {wager(25)}
+          <Text className='pull-left'>
+            Bank: {game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]} points
+          </Text>
+          {wager(game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)])}
           <HStack spacing={8}>
             <Button>
               {/* // onClick={() => {

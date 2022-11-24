@@ -132,19 +132,18 @@ export default class BlackjackGame {
   public resetGame(shuffle?: boolean) {
     this._initializeDeck(shuffle ?? true);
     this.players.push(...this._newPlayers);
+    this._newPlayers.forEach(id => {
+      this.playerPoints.set(id, 100);
+    });
     this._newPlayers = [];
     this.players.forEach(id => {
-      this.playerPoints.set(id, 0);
       this._hands.set(id, [[]]);
       this._currentHandIndex.set(id, 0);
       this._playerBets.set(id, []); // To be updated later
       this._handsAwaitingBet.set(id, 0);
     });
     this.gameInProgress = true;
-    this._deal();
-
-    console.log('Game Reset');
-    console.log('Hands: ', this._hands);
+    // this._deal();
   }
 
   /**
@@ -160,6 +159,12 @@ export default class BlackjackGame {
       throw new Error('Game has maximum number of players');
     }
     this._newPlayers.push(playerID);
+    // if (
+    //   !(this.players.includes(playerID) || this._newPlayers.includes(playerID)) &&
+    //   this.players.length + this._newPlayers.length >= this.PLAYERLIMIT
+    // ) {
+    //   this._newPlayers.push(playerID);
+    // }
   }
 
   /**

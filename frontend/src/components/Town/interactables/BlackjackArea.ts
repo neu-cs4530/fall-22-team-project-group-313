@@ -114,7 +114,7 @@ export default class BlackjackArea extends Interactable {
       const occupants = bjController.occupants;
       occupants.push(this.townController.ourPlayer);
       bjController.occupants = occupants;
-      this.townController.emitBlackjackAreaUpdate(bjController);
     }
+    this.townController.emitBlackjackAreaUpdate(bjController);
   }
 }

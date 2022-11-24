@@ -171,12 +171,16 @@ export default function BlackjackAreaModal({
 
   function dealer(cards: Card[]) {
     const faceUpCards = cards.filter(card => card.isFaceUp);
+    const faceDownCards = cards.filter(card => !card.isFaceUp);
     return (
       <GridItem colStart={7} rowStart={9} rowSpan={2} colSpan={1}>
         <HStack spacing={10}>
           <Text> Dealer </Text>
           {faceUpCards.map(card => {
             return printCard(card.rank, card.suit);
+          })}
+          {faceDownCards.map(() => {
+            return printCard('', '');
           })}
           {/* <Text> {totalValue} </Text> */}
         </HStack>

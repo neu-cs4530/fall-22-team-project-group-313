@@ -62,7 +62,7 @@ export default class Card {
     const card = new Card(Suit.C, 'A');
     const ranks = Array.from(card._rankToValue.keys());
     ranks.forEach(rank => {
-      Object.values(Suit).forEach(suit => {
+      Object.keys(Suit).forEach(suit => {
         deck.push(new Card(suit as Suit, rank));
       });
     });

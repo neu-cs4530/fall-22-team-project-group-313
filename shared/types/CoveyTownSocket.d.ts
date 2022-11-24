@@ -65,10 +65,10 @@ export enum BlackjackMove {
 }
 
 export enum Suit {
-  S = "spades",
-  H = "hearts",
-  D = "diamonds",
-  C = "clubs",
+  S = 'S',
+  H = 'H',
+  D = 'D',
+  C = 'C',
 }
 
 export type Card = {

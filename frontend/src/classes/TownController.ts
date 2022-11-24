@@ -665,6 +665,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
         players: [],
         isStarted: false,
         dealerHand: [],
+        results: [],
       });
       this._blackjackAreasInternal.push(newController);
       return newController;

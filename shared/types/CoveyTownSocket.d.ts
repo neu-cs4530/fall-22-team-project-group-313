@@ -112,6 +112,7 @@ export interface BlackjackGame {
   players: string[];
   isStarted: boolean;
   dealerHand: Card[];
+  results: string[];
 }
 
 export interface ServerToClientEvents {

@@ -201,6 +201,7 @@ export default function BlackjackAreaModal({
           }
         })}
         {dealer(game.dealerHand)}
+        <GridItem colStart={5} rowStart={33} rowSpan={2} colSpan={10}></GridItem>
       </Grid>
     );
   }
@@ -284,6 +285,26 @@ export default function BlackjackAreaModal({
           <Text className='pull-left'>
             Bank: {game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]} points
           </Text>
+          <HStack hidden={game.results.length == 0}>
+            <Text>
+              You {game.results[game.players.indexOf(coveyTownController.ourPlayer.id)]}{' '}
+              {game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)]} points
+            </Text>
+            <Button
+              onClick={() => {
+                updateGameModel(
+                  blackjackAreaController.gameAction == undefined
+                    ? 0
+                    : blackjackAreaController.gameAction.index + 1,
+                  'DEALER',
+                  'EndGame',
+                );
+                coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+                setWagerHide(!wagerHide);
+              }}>
+              Click this button to start a new hand!
+            </Button>
+          </HStack>
           {wager(game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)])}
           <HStack hidden={game.playerMoveID !== coveyTownController.ourPlayer.id} spacing={8}>
             <Button

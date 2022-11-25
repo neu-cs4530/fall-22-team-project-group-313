@@ -17,13 +17,11 @@ import {
   NumberInputStepper,
   Text,
 } from '@chakra-ui/react';
-import _, { indexOf } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useBlackjackAreaOccupants, useGame } from '../../../classes/BlackjackAreaController';
-import PlayerController from '../../../classes/PlayerController';
+import { useGame } from '../../../classes/BlackjackAreaController';
 import { useBlackjackAreaController } from '../../../classes/TownController';
 import useTownController from '../../../hooks/useTownController';
-import { GameAction, Card } from '../../../types/CoveyTownSocket';
+import { Card, GameAction } from '../../../types/CoveyTownSocket';
 import BlackjackArea from './BlackjackArea';
 
 export default function BlackjackAreaModal({
@@ -44,6 +42,11 @@ export default function BlackjackAreaModal({
   useEffect(() => {
     if (blackjackAreaController.gameAction?.GameAction === 'EndGame') {
       setWagerHide(false);
+      setWagerValue(
+        Math.trunc(
+          game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)] * 0.05,
+        ),
+      );
     }
   }, [blackjackAreaController.gameAction]);
 
@@ -61,39 +64,6 @@ export default function BlackjackAreaModal({
   }, [coveyTownController, close]);
 
   // const toast = useToast();
-
-  //   const createBlackjackArea = useCallback(async () => {
-  //     if (video && viewingAreaController) {
-  //       const request: ViewingAreaModel = {
-  //         id: viewingAreaController.id,
-  //         video,
-  //         isPlaying: true,
-  //         elapsedTimeSec: 0,
-  //       };
-  //       try {
-  //         await coveyTownController.createViewingArea(request);
-  //         toast({
-  //           title: 'Video set!',
-  //           status: 'success',
-  //         });
-  //         coveyTownController.unPause();
-  //       } catch (err) {
-  //         if (err instanceof Error) {
-  //           toast({
-  //             title: 'Unable to set video URL',
-  //             description: err.toString(),
-  //             status: 'error',
-  //           });
-  //         } else {
-  //           console.trace(err);
-  //           toast({
-  //             title: 'Unexpected Error',
-  //             status: 'error',
-  //           });
-  //         }
-  //       }
-  //     }
-  //   }, [video, coveyTownController, viewingAreaController, toast]);
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   const CreateCard = (props: { suit: string; value: string }) => {
@@ -219,12 +189,12 @@ export default function BlackjackAreaModal({
         <Text hidden={!wagerHide}>Current Wager: {wagerValue}</Text>
         <Text hidden={wagerHide}>Wager:</Text>
         <NumberInput
-          defaultValue={minPoints}
+          defaultValue={wagerValue}
+          id='numInput'
           min={minPoints}
           max={maxPoints}
-          value={wagerValue}
           hidden={wagerHide}
-          onChange={(value: string) => setWagerValue(value as unknown as number)}>
+          onChange={(value: string) => setWagerValue((value as unknown) as number)}>
           <NumberInputField />
           <NumberInputStepper>
             <NumberIncrementStepper />
@@ -276,7 +246,7 @@ export default function BlackjackAreaModal({
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>BlackJackArea </ModalHeader>
-        <ModalCloseButton />
+        <ModalCloseButton hidden={game.isStarted && game.results.length === 0} />
         <Button
           hidden={game.isStarted}
           onClick={() => {

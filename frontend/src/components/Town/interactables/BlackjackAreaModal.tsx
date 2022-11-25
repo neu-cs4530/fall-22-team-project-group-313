@@ -24,6 +24,55 @@ import useTownController from '../../../hooks/useTownController';
 import { Card, GameAction } from '../../../types/CoveyTownSocket';
 import BlackjackArea from './BlackjackArea';
 
+function cardValue(card: Card) {
+  switch (card.rank) {
+    case 'A':
+      return 11;
+    case '2':
+      return 2;
+    case '3':
+      return 3;
+    case '4':
+      return 4;
+    case '5':
+      return 5;
+    case '6':
+      return 6;
+    case '7':
+      return 7;
+    case '8':
+      return 8;
+    case '9':
+      return 9;
+    case '10':
+      return 10;
+    case 'J':
+      return 10;
+    case 'Q':
+      return 10;
+    case 'K':
+      return 10;
+    default:
+      throw new Error('Unexpected Card Rank');
+  }
+}
+
+function handValue(hand: Card[]): number {
+  let total = 0;
+  let aceCount = 0;
+  hand.forEach(card => {
+    total += cardValue(card);
+    if (cardValue(card) === 11) {
+      aceCount += 1;
+    }
+  });
+  while (total > 21 && aceCount > 0) {
+    total -= 10;
+    aceCount -= 1;
+  }
+  return total;
+}
+
 export default function BlackjackAreaModal({
   isOpen,
   close,
@@ -38,6 +87,8 @@ export default function BlackjackAreaModal({
   const game = useGame(blackjackAreaController);
   const [wagerValue, setWagerValue] = useState(5);
   const [wagerHide, setWagerHide] = useState(false);
+  const [cannotSplit, setCannotSplit] = useState(true);
+  const [cannotDouble, setCannotDouble] = useState(true);
 
   useEffect(() => {
     if (blackjackAreaController.gameAction?.GameAction === 'EndGame') {
@@ -68,7 +119,66 @@ export default function BlackjackAreaModal({
         );
       }
     }
-  }, [blackjackAreaController.gameAction]);
+  }, [
+    blackjackAreaController.gameAction,
+    coveyTownController.ourPlayer.id,
+    game.playerPoints,
+    game.players,
+    wagerValue,
+  ]);
+
+  useEffect(() => {
+    setCannotDouble(true);
+    setCannotSplit(true);
+    if (game.isStarted) {
+      // Your player must have only one hand
+      if (game.hands[game.players.indexOf(coveyTownController.ourPlayer.id)].length == 1) {
+        // You must have two cards exactly
+        if (game.hands[game.players.indexOf(coveyTownController.ourPlayer.id)][0].length == 2) {
+          console.log(
+            'BET: ',
+            game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)][
+              game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)].length - 1
+            ],
+          );
+          if (
+            // Bank value must allow it
+            game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)][
+              game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)].length - 1
+            ] *
+              2 <=
+            game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]
+          ) {
+            // Your two cards must have the same value to split
+            if (
+              cardValue(
+                game.hands[game.players.indexOf(coveyTownController.ourPlayer.id)][0][0],
+              ) ===
+              cardValue(game.hands[game.players.indexOf(coveyTownController.ourPlayer.id)][0][1])
+            ) {
+              setCannotSplit(false);
+            }
+            // Your hand value must be between 9-11 to double
+            if (
+              handValue(game.hands[game.players.indexOf(coveyTownController.ourPlayer.id)][0]) >=
+                9 &&
+              handValue(game.hands[game.players.indexOf(coveyTownController.ourPlayer.id)][0]) <= 11
+            ) {
+              setCannotDouble(false);
+            }
+          }
+        }
+      }
+    }
+  }, [
+    blackjackAreaController.gameAction,
+    coveyTownController.ourPlayer.id,
+    game.hands,
+    game.isStarted,
+    game.playerBets,
+    game.playerPoints,
+    game.players,
+  ]);
 
   useEffect(() => {
     if (isOpen) {
@@ -82,8 +192,6 @@ export default function BlackjackAreaModal({
     coveyTownController.unPause();
     close();
   }, [coveyTownController, close]);
-
-  // const toast = useToast();
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   const CreateCard = (props: { suit: string; value: string }) => {
@@ -340,8 +448,22 @@ export default function BlackjackAreaModal({
               }}>
               Stay
             </Button>
-            <Button>Split</Button>
             <Button
+              hidden={cannotSplit}
+              onClick={() => {
+                updateGameModel(
+                  blackjackAreaController.gameAction == undefined
+                    ? 0
+                    : blackjackAreaController.gameAction.index + 1,
+                  coveyTownController.ourPlayer.id,
+                  'Split',
+                );
+                coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+              }}>
+              Split
+            </Button>
+            <Button
+              hidden={cannotDouble}
               onClick={() => {
                 updateGameModel(
                   blackjackAreaController.gameAction == undefined
@@ -357,7 +479,7 @@ export default function BlackjackAreaModal({
           </HStack>
         </ModalFooter>
         <ModalFooter hidden={!game.isStarted || !!playerInGame(coveyTownController.ourPlayer.id)}>
-          You are currently the in the queue for the table.
+          The hand is already in progress. Please wait for the next hand to join the game.
         </ModalFooter>
       </ModalContent>
     </Modal>

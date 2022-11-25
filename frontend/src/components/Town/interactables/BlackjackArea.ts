@@ -31,8 +31,8 @@ export default class BlackjackArea extends Interactable {
     let output = '';
     const bjController = this.townController.getBlackjackAreaController(this);
 
-    if (bjController.gameOccupants.length == 5) {
-      output += 'The game is currently full.\n Find another Blackjack Area.\n\n';
+    if (bjController.game.players.length + bjController.game.queue.length >= 5) {
+      output += 'This game is currently full.\n\n';
     } else {
       output += 'Press space to play Blackjack\n\n';
     }
@@ -134,12 +134,11 @@ export default class BlackjackArea extends Interactable {
   }
 
   interact(): void {
-    // TODO: Delete player on Exit!
     this._labelText?.setVisible(false);
     this._isInteracting = true;
     const bjController = this.townController.getBlackjackAreaController(this);
 
-    if (bjController.gameOccupants.length < 5) {
+    if (bjController.game.players.length + bjController.game.queue.length < 5) {
       if (
         !bjController.gameOccupants.find(player => player.id == this.townController.ourPlayer.id)
       ) {

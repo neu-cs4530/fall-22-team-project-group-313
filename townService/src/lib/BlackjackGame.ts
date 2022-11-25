@@ -272,7 +272,9 @@ export default class BlackjackGame {
         } else {
           // TODO
           const newPlayers = this._players.filter(id => id !== playerID);
+          const newQueue = this._newPlayers.filter(id => id !== playerID);
           this._players = newPlayers;
+          this._newPlayers = newQueue;
           this._hands.delete(playerID);
           this._currentHandIndex.delete(playerID);
           this._handsAwaitingBet.delete(playerID);
@@ -416,10 +418,10 @@ export default class BlackjackGame {
     if (bet <= 0) {
       throw new Error('Bet must be positive!');
     }
-    const maxBet = (this.playerPoints.get(playerID) as number) / 2;
-    if (bet > maxBet) {
-      throw new Error('Bet must not be greater than half the current points!');
-    }
+    // const maxBet = (this.playerPoints.get(playerID) as number) / 2;
+    // if (bet > maxBet) {
+    //   throw new Error('Bet must not be greater than half the current points!');
+    // }
     this._handsAwaitingBet.set(playerID, undefined);
     const currentBets = this._playerBets.get(playerID) as number[];
     currentBets[awaitingBet as number] = bet;
@@ -458,6 +460,7 @@ export default class BlackjackGame {
       playerBets: Array.from(this.playerBets.values()),
       playerMoveID: this.playerMoveIndex === -1 ? '' : this._players[this.playerMoveIndex],
       players: this._players,
+      queue: this._newPlayers,
       isStarted: this.gameInProgress,
       dealerHand: this._dealerHand,
       results: this._results,

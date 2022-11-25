@@ -722,6 +722,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
         playerBets: [[]],
         playerMoveID: '',
         players: [],
+        queue: [],
         isStarted: false,
         dealerHand: [],
         results: [],

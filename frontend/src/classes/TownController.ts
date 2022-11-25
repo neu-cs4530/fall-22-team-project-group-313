@@ -199,6 +199,11 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
   private _viewingAreas: ViewingAreaController[] = [];
 
   /**
+   * A Map of Player IDs to points. Maximum of 5 entrys.
+   */
+  private _blackjackHistoricalLeaders = new Map<string, number>();
+
+  /**
    * The current list of blackjack areas in the town. Adding or removing blackjack areas might
    * replace the array with a new one; clients should take note not to retain stale references.
    */
@@ -332,6 +337,14 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     this.emit('blackjackAreasChanged', newBlackjackAreas);
   }
 
+  public get blackjackHistoricalLeaders() {
+    return this._blackjackHistoricalLeaders;
+  }
+
+  public set blackjackHistoricalLeaders(historicalLeaders: Map<string, number>) {
+    this._blackjackHistoricalLeaders = historicalLeaders;
+  }
+
   /**
    * Begin interacting with an interactable object. Emits an event to all listeners.
    * @param interactedObj
@@ -459,6 +472,10 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
           updatedBlackjackArea.occupants = this._playersByIDs(interactable.occupantsByID);
           updatedBlackjackArea.gameOccupants = this._playersByIDs(interactable.gameOccupantsByID);
           const emptyAfterChange = updatedBlackjackArea.isEmpty();
+          console.log('TOWNCONTROLLER LEADERS BEFORE: ', this.blackjackHistoricalLeaders);
+          console.log('TOWNCONTROLLER PLAYERS: ', this._players);
+          this.updateHistoricalLeaders();
+          console.log('TOWNCONTROLLER LEADERS AFTER: ', this._blackjackHistoricalLeaders);
           if (emptyNow !== emptyAfterChange) {
             this.emit('blackjackAreasChanged', this._blackjackAreasInternal);
           }
@@ -553,6 +570,43 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    */
   async createBlackjackArea(newArea: BlackjackAreaModel) {
     await this._townsService.createBlackjackArea(this.townID, this.sessionToken, newArea);
+  }
+
+  public updateHistoricalLeaders(): void {
+    let availableSpots = 5 - this._blackjackHistoricalLeaders.keys.length;
+    this._blackjackAreasInternal.forEach(bjArea => {
+      bjArea.game.players.forEach(player => {
+        const points = bjArea.game.playerPoints[bjArea.game.players.indexOf(player)];
+        const playerName =
+          (this.players.find(play => play.id === player) as PlayerController).userName +
+          ':' +
+          player;
+        if (availableSpots > 0) {
+          this.blackjackHistoricalLeaders.set(playerName, points);
+          availableSpots--;
+        } else {
+          console.log('ELSE:', playerName);
+          if (this.blackjackHistoricalLeaders.has(playerName)) {
+            if ((this.blackjackHistoricalLeaders.get(playerName) as number) < points) {
+              this.blackjackHistoricalLeaders.set(playerName, points);
+            }
+          } else {
+            const min = Math.min(...Array.from(this.blackjackHistoricalLeaders.values()));
+            let key = '';
+            if (points > min) {
+              for (const item of this.blackjackHistoricalLeaders) {
+                if (item[1] == min) {
+                  key = item[0];
+                  break;
+                }
+              }
+              this.blackjackHistoricalLeaders.delete(key);
+              this.blackjackHistoricalLeaders.set(playerName, points);
+            }
+          }
+        }
+      });
+    });
   }
 
   /**

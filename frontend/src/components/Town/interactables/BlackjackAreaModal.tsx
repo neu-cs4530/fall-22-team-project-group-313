@@ -227,6 +227,14 @@ export default function BlackjackAreaModal({
     }
   }
 
+  function playerInGame(playerId: string) {
+    console.log(
+      'Did I get em?: ',
+      game.players.find(id => id === playerId),
+    );
+    return game.players.find(id => id === playerId);
+  }
+
   return (
     <Modal
       isOpen={isOpen}
@@ -258,7 +266,9 @@ export default function BlackjackAreaModal({
         <ModalBody hidden={!game.isStarted} pb={6}>
           {allHands(game.players, game.hands)}
         </ModalBody>
-        <ModalFooter hidden={!game.isStarted} justifyContent={'space-between'}>
+        <ModalFooter
+          hidden={!game.isStarted || !playerInGame(coveyTownController.ourPlayer.id)}
+          justifyContent={'space-between'}>
           <Text className='pull-left'>
             Bank: {game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]} points
           </Text>
@@ -324,6 +334,9 @@ export default function BlackjackAreaModal({
               Double
             </Button>
           </HStack>
+        </ModalFooter>
+        <ModalFooter hidden={!game.isStarted || !!playerInGame(coveyTownController.ourPlayer.id)}>
+          You are currently the in the queue for the table.
         </ModalFooter>
       </ModalContent>
     </Modal>

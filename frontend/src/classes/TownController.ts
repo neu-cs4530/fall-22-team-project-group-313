@@ -582,8 +582,14 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
           ':' +
           player;
         if (availableSpots > 0) {
-          this.blackjackHistoricalLeaders.set(playerName, points);
-          availableSpots--;
+          if (this.blackjackHistoricalLeaders.has(playerName)) {
+            if ((this.blackjackHistoricalLeaders.get(playerName) as number) < points) {
+              this.blackjackHistoricalLeaders.set(playerName, points);
+            }
+          } else {
+            this.blackjackHistoricalLeaders.set(playerName, points);
+            availableSpots--;
+          }
         } else {
           console.log('ELSE:', playerName);
           if (this.blackjackHistoricalLeaders.has(playerName)) {

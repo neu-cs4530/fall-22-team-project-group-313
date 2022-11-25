@@ -253,7 +253,10 @@ export default class BlackjackGame {
         break;
       }
       case BlackjackMove.Leave: {
-        if (this._players.length === 1 && this._newPlayers.length === 0) {
+        if (
+          (this._players.length === 1 && this._newPlayers.length === 0) ||
+          (this._players.length === 0 && this._newPlayers.length === 1)
+        ) {
           this._players = [];
           this.playerMoveIndex = -1;
           this._hands = new Map<string, Card[][]>();

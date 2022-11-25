@@ -19,12 +19,25 @@ export default class BlackjackArea extends Interactable {
     this._labelText = this.scene.add.text(
       this.x - this.displayWidth / 2,
       this.y - this.displayHeight / 2,
-      `Press space to play Blackjack\n\n` + this.leaderboard(),
+      this.playMessage() + this.leaderboard(),
       { color: '#FFFFFF', backgroundColor: '#000000' },
     );
     this._labelText.setVisible(false);
     //this.townController.getBlackjackAreaController(this);
     this.setDepth(-1);
+  }
+
+  playMessage(): string {
+    let output = '';
+    const bjController = this.townController.getBlackjackAreaController(this);
+
+    if (bjController.gameOccupants.length == 5) {
+      output += 'The game is currently full.\n Find another Blackjack Area.\n\n';
+    } else {
+      output += 'Press space to play Blackjack\n\n';
+    }
+
+    return output;
   }
 
   leaderboard(): string {
@@ -102,7 +115,7 @@ export default class BlackjackArea extends Interactable {
     this._labelText = this.scene.add.text(
       this.x - this.displayWidth / 2,
       this.y - this.displayHeight / 2,
-      `Press space to play Blackjack\n\n` + this.leaderboard(),
+      this.playMessage() + this.leaderboard(),
       { color: '#FFFFFF', backgroundColor: '#000000' },
     );
     this._labelText.setVisible(false);
@@ -125,16 +138,21 @@ export default class BlackjackArea extends Interactable {
     this._labelText?.setVisible(false);
     this._isInteracting = true;
     const bjController = this.townController.getBlackjackAreaController(this);
-    if (!bjController.gameOccupants.find(player => player.id == this.townController.ourPlayer.id)) {
-      const occupants = bjController.gameOccupants;
-      occupants.push(this.townController.ourPlayer);
-      bjController.gameOccupants = occupants;
+
+    if (bjController.gameOccupants.length < 5) {
+      if (
+        !bjController.gameOccupants.find(player => player.id == this.townController.ourPlayer.id)
+      ) {
+        const occupants = bjController.gameOccupants;
+        occupants.push(this.townController.ourPlayer);
+        bjController.gameOccupants = occupants;
+      }
+      bjController.gameAction = {
+        index: bjController.gameAction == undefined ? 0 : bjController.gameAction.index + 1,
+        playerID: this.townController.ourPlayer.id,
+        GameAction: 'Join',
+      };
+      this.townController.emitBlackjackAreaUpdate(bjController);
     }
-    bjController.gameAction = {
-      index: bjController.gameAction == undefined ? 0 : bjController.gameAction.index + 1,
-      playerID: this.townController.ourPlayer.id,
-      GameAction: 'Join',
-    };
-    this.townController.emitBlackjackAreaUpdate(bjController);
   }
 }

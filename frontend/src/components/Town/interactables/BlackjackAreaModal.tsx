@@ -42,11 +42,31 @@ export default function BlackjackAreaModal({
   useEffect(() => {
     if (blackjackAreaController.gameAction?.GameAction === 'EndGame') {
       setWagerHide(false);
-      setWagerValue(
-        Math.trunc(
-          game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)] * 0.05,
-        ),
-      );
+      if (game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)] <= 25) {
+        if (
+          wagerValue > game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]
+        ) {
+          setWagerValue(game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]);
+        }
+      } else if (
+        wagerValue >
+        Math.trunc(game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)] * 0.25)
+      ) {
+        setWagerValue(
+          Math.trunc(
+            game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)] * 0.25,
+          ),
+        );
+      } else if (
+        wagerValue <
+        Math.trunc(game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)] * 0.05)
+      ) {
+        setWagerValue(
+          Math.trunc(
+            game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)] * 0.25,
+          ),
+        );
+      }
     }
   }, [blackjackAreaController.gameAction]);
 
@@ -190,11 +210,12 @@ export default function BlackjackAreaModal({
         <Text hidden={wagerHide}>Wager:</Text>
         <NumberInput
           defaultValue={wagerValue}
+          clampValueOnBlur={true}
           id='numInput'
           min={minPoints}
           max={maxPoints}
           hidden={wagerHide}
-          onChange={(value: string) => setWagerValue((value as unknown) as number)}>
+          onChange={(value: string) => setWagerValue(value as unknown as number)}>
           <NumberInputField />
           <NumberInputStepper>
             <NumberIncrementStepper />

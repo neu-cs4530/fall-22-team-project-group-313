@@ -19,7 +19,7 @@ export default class BlackjackArea extends Interactable {
     this._labelText = this.scene.add.text(
       this.x - this.displayWidth / 2,
       this.y - this.displayHeight / 2,
-      `Press space to play Blackjack\n\n` + this.leaderboard(),
+      this.playMessage() + this.leaderboard(),
       { color: '#FFFFFF', backgroundColor: '#000000' },
     );
     this._labelText.setVisible(false);
@@ -27,60 +27,81 @@ export default class BlackjackArea extends Interactable {
     this.setDepth(-1);
   }
 
-  leaderboard(): string {
-    const currentLeaders = new Map([
-      ['1', 100],
-      ['2', 1000],
-      ['3', 50],
-      ['4', 75],
-    ]);
+  playMessage(): string {
+    let output = '';
+    const bjController = this.townController.getBlackjackAreaController(this);
 
-    const historicalLeaders = new Map([
-      ['1', 100],
-      ['2', 1000],
-      ['3', 50],
-      ['4', 75],
-    ]);
+    if (bjController.gameOccupants.length == 5) {
+      output += 'The game is currently full.\n Find another Blackjack Area.\n\n';
+    } else {
+      output += 'Press space to play Blackjack\n\n';
+    }
+
+    return output;
+  }
+
+  leaderboard(): string {
+    const currentLeaders = new Map();
 
     let output = 'Current Blackjack Leaders:\n';
 
     // Get blackjack controller
-    //this.townController.getBlackjackAreaController(this);
+    const bjController = this.townController.getBlackjackAreaController(this);
 
     // Get the current leaders dictionary from blackjack controller
-
+    // game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]
+    if (bjController.game.isStarted) {
+      bjController.game.players.forEach(playerID =>
+        currentLeaders.set(
+          this.townController.players.find(player => player.id === playerID)?.userName +
+            ':' +
+            playerID,
+          bjController.game.playerPoints[bjController.game.players.indexOf(playerID)],
+        ),
+      );
+    }
     // Get the historical leaders dictionary from townController
 
     // Sort leaders dictionary
     const currentLeadersSorted = new Map([...currentLeaders.entries()].sort((a, b) => b[1] - a[1]));
 
-    if (!currentLeadersSorted) {
-      output += 'No players are currently playing in this area.';
+    if (!currentLeadersSorted || !bjController.game.isStarted) {
+      output += 'No current players in this area.\n';
     }
 
     // Iterate through dictionary
     let i = 1;
+    let jsd = 1;
     for (const item of currentLeadersSorted) {
-      output += `${i}. Player ${item[0]} with ${item[1]} points\n`;
-      i++;
+      if (jsd == 3) output += `${i}. ${item[0].split(':', 1)} - ${item[1]} points\n`;
+      else output += `${i}. ${item[0].split(':', 1)} - ${item[1]} points\n`;
+      if (item[1] != Array.from(currentLeadersSorted.values())[jsd]) i++;
+      if (jsd == 3) break;
+      jsd++;
     }
 
     output += '\nHistorical Blackjack Leaders:\n';
+
+    const historicalLeaders = this.townController.blackjackHistoricalLeaders;
+    console.log('LEADERS', historicalLeaders);
 
     // Sort leaders dictionary
     const historicalLeadersSorted = new Map(
       [...historicalLeaders.entries()].sort((a, b) => b[1] - a[1]),
     );
 
-    if (!historicalLeadersSorted) {
+    if (Array.from(historicalLeadersSorted.values()).length == 0) {
       output += 'No historical leaders in this town.';
     }
 
     // Iterate through dictionary
-    let j = 1;
+    i = 1;
+    jsd = 1;
     for (const item of historicalLeadersSorted) {
-      output += `${j}. Player ${item[0]} with ${item[1]} points\n`;
-      j++;
+      if (jsd == 3) output += `${i}. ${item[0].split(':', 1)} - ${item[1]} points\n`;
+      else output += `${i}. ${item[0].split(':', 1)} - ${item[1]} points\n`;
+      if (item[1] != Array.from(historicalLeadersSorted.values())[jsd]) i++;
+      jsd++;
     }
 
     return output.trim();
@@ -91,6 +112,13 @@ export default class BlackjackArea extends Interactable {
       throw new Error('Should not be able to overlap with this interactable before added to scene');
     }
     const location = this.townController.ourPlayer.location;
+    this._labelText = this.scene.add.text(
+      this.x - this.displayWidth / 2,
+      this.y - this.displayHeight / 2,
+      this.playMessage() + this.leaderboard(),
+      { color: '#FFFFFF', backgroundColor: '#000000' },
+    );
+    this._labelText.setVisible(false);
     this._labelText.setX(location.x);
     this._labelText.setY(location.y);
     this._labelText.setDepth(100);
@@ -110,10 +138,20 @@ export default class BlackjackArea extends Interactable {
     this._labelText?.setVisible(false);
     this._isInteracting = true;
     const bjController = this.townController.getBlackjackAreaController(this);
-    if (!bjController.occupants.find(player => player.id == this.townController.ourPlayer.id)) {
-      const occupants = bjController.occupants;
-      occupants.push(this.townController.ourPlayer);
-      bjController.occupants = occupants;
+
+    if (bjController.gameOccupants.length < 5) {
+      if (
+        !bjController.gameOccupants.find(player => player.id == this.townController.ourPlayer.id)
+      ) {
+        const occupants = bjController.gameOccupants;
+        occupants.push(this.townController.ourPlayer);
+        bjController.gameOccupants = occupants;
+      }
+      bjController.gameAction = {
+        index: bjController.gameAction == undefined ? 0 : bjController.gameAction.index + 1,
+        playerID: this.townController.ourPlayer.id,
+        GameAction: 'Join',
+      };
       this.townController.emitBlackjackAreaUpdate(bjController);
     }
   }

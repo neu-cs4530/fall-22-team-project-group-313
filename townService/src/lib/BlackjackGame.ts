@@ -7,9 +7,10 @@ import Card from './Card';
 export enum BlackjackMove {
   Hit = 'Hit',
   Stay = 'Stay',
-  Leave = 'Surrender',
+  Leave = 'Leave',
   Split = 'Split',
   Double = 'Double',
+  Join = 'Join',
 }
 
 export enum DealerMove {
@@ -50,7 +51,7 @@ export default class BlackjackGame {
   // Number of decks to be used in the game
   private readonly _numDecks: number;
 
-  public players: string[];
+  private _players: string[];
 
   // Queue to join next round
   private _newPlayers: string[];
@@ -59,12 +60,11 @@ export default class BlackjackGame {
 
   private _shouldShuffle: boolean;
 
-  constructor(playerIDs: string[], numDecks?: number, shuffle?: boolean) {
-    if (playerIDs.length > this.PLAYERLIMIT) {
-      throw new Error(`Too many players! Limit is ${this.PLAYERLIMIT}`);
-    }
-    this.players = playerIDs;
-    this.playerMoveIndex = 0;
+  public _results: string[];
+
+  constructor(numDecks?: number, shuffle?: boolean) {
+    this._players = [];
+    this.playerMoveIndex = -1;
     this._numDecks = numDecks ?? 6;
     this._hands = new Map<string, Card[][]>();
     this._currentHandIndex = new Map<string, number>();
@@ -73,6 +73,7 @@ export default class BlackjackGame {
     this.playerPoints = new Map<string, number>();
     this._newPlayers = [];
     this._shouldShuffle = shuffle ?? true;
+    this._results = [];
   }
 
   public get hands() {
@@ -114,7 +115,7 @@ export default class BlackjackGame {
 
   private _deal(): void {
     for (let i = 0; i < 2; i++) {
-      this.players.forEach(id => {
+      this._players.forEach(id => {
         const hands = this._hands.get(id) as Card[][];
         const hand = hands[0];
         hand.push(this._deck.pop() as Card);
@@ -131,20 +132,21 @@ export default class BlackjackGame {
    */
   public resetGame(shuffle?: boolean) {
     this._initializeDeck(shuffle ?? true);
-    this.players.push(...this._newPlayers);
+    this._players.push(...this._newPlayers);
+    this._newPlayers.forEach(id => {
+      this.playerPoints.set(id, 100);
+    });
     this._newPlayers = [];
-    this.players.forEach(id => {
-      this.playerPoints.set(id, 0);
+    this._players.forEach(id => {
       this._hands.set(id, [[]]);
       this._currentHandIndex.set(id, 0);
       this._playerBets.set(id, []); // To be updated later
       this._handsAwaitingBet.set(id, 0);
     });
     this.gameInProgress = true;
-    this._deal();
-
-    console.log('Game Reset');
-    console.log('Hands: ', this._hands);
+    this.playerMoveIndex = -1;
+    this._results = [];
+    this._dealerHand = [];
   }
 
   /**
@@ -152,14 +154,21 @@ export default class BlackjackGame {
    * @param playerID Player ID to be joining
    */
   public addPlayer(playerID: string) {
-    console.log('ADD PLAYER');
-    if (this.players.includes(playerID) || this._newPlayers.includes(playerID)) {
+    console.log('WHY: ', this._players);
+    console.log('HUH: ', this._newPlayers);
+    if (this._players.includes(playerID) || this._newPlayers.includes(playerID)) {
       throw new Error('Player has already been added to this game!');
     }
-    if (this.players.length + this._newPlayers.length >= this.PLAYERLIMIT) {
+    if (this._players.length + this._newPlayers.length >= this.PLAYERLIMIT) {
       throw new Error('Game has maximum number of players');
     }
     this._newPlayers.push(playerID);
+    // if (
+    //   !(this.players.includes(playerID) || this._newPlayers.includes(playerID)) &&
+    //   this.players.length + this._newPlayers.length >= this.PLAYERLIMIT
+    // ) {
+    //   this._newPlayers.push(playerID);
+    // }
   }
 
   /**
@@ -167,11 +176,11 @@ export default class BlackjackGame {
    * @param playerID player leaving
    */
   public removePlayer(playerID: string) {
-    if (!this.players.includes(playerID) || !this._newPlayers.includes(playerID)) {
+    if (!this._players.includes(playerID) || !this._newPlayers.includes(playerID)) {
       throw new Error('Player does not exist in this game!');
     }
-    if (this.players.includes(playerID)) {
-      this.players.splice(this.players.indexOf(playerID), 1);
+    if (this._players.includes(playerID)) {
+      this._players.splice(this._players.indexOf(playerID), 1);
     } else {
       this._newPlayers.splice(this._newPlayers.indexOf(playerID), 1);
     }
@@ -183,7 +192,16 @@ export default class BlackjackGame {
    * @param move the Blackjack move the player chooses
    */
   public playerMove(playerID: string, move: BlackjackMove): void {
-    if (playerID !== this.players[this.playerMoveIndex]) {
+    console.log('PLAYER MOVE: ', move);
+    console.log('MOVE INDEX: ', this.playerMoveIndex);
+    console.log('PLAYERS: ', this._players);
+    const isWager = (move as string).substring(0, 6) === 'Wager:';
+    if (
+      !isWager &&
+      playerID !== this._players[this.playerMoveIndex] &&
+      move !== 'Leave' &&
+      move !== 'Join'
+    ) {
       throw new Error('Wrong player moving!');
     }
     let turnOver = false;
@@ -235,20 +253,67 @@ export default class BlackjackGame {
         break;
       }
       case BlackjackMove.Leave: {
-        // TODO
-        this.players.slice(this.players.indexOf(playerID), 1);
-        this._hands.delete(playerID);
-        this._currentHandIndex.delete(playerID);
-        this._handsAwaitingBet.delete(playerID);
-        this._playerBets.delete(playerID);
-        // this._playerPoints.delete(playerID);
-        // Don't say turnOver = true as index should autocompensate
+        if (
+          (this._players.length === 1 && this._newPlayers.length === 0) ||
+          (this._players.length === 0 && this._newPlayers.length === 1)
+        ) {
+          this._players = [];
+          this.playerMoveIndex = -1;
+          this._hands = new Map<string, Card[][]>();
+          this._currentHandIndex = new Map<string, number>();
+          this._playerBets = new Map<string, number[]>();
+          this._handsAwaitingBet = new Map<string, number | undefined>();
+          this.playerPoints = new Map<string, number>();
+          this._newPlayers = [];
+          this._shouldShuffle = true;
+          this._results = [];
+          this.gameInProgress = false;
+          break;
+        } else {
+          // TODO
+          const newPlayers = this._players.filter(id => id !== playerID);
+          this._players = newPlayers;
+          this._hands.delete(playerID);
+          this._currentHandIndex.delete(playerID);
+          this._handsAwaitingBet.delete(playerID);
+          this._playerBets.delete(playerID);
+          // this._playerPoints.delete(playerID);
+          // Don't say turnOver = true as index should autocompensate
+          break;
+        }
+      }
+      case BlackjackMove.Join: {
         break;
       }
       default:
-        throw new Error('Unknown Blackjack move');
+        if (isWager) {
+          const wagerValue = +(move as string).slice(6);
+          this.setBet(playerID, wagerValue);
+          const nonBetters = this._players.find(id => this._handsAwaitingBet.get(id) !== undefined);
+          if (!nonBetters) {
+            this._deal();
+            this.playerMoveIndex = 0;
+            if (this.handValues(this._players[0])[0] === 21) {
+              this.playerMove(this._players[0], BlackjackMove.Stay);
+            }
+          }
+        } else {
+          throw new Error('Unknown Blackjack move');
+        }
     }
-    this.playerMoveIndex += turnOver ? 1 : 0;
+
+    if (move !== 'Leave') {
+      this.playerMoveIndex += turnOver ? 1 : 0;
+      if (turnOver && this.playerMoveIndex < this._players.length) {
+        if (this.handValues(this._players[this.playerMoveIndex])[0] === 21) {
+          this.playerMove(this._players[this.playerMoveIndex], BlackjackMove.Stay);
+        }
+      }
+
+      if (this.playerMoveIndex >= this._players.length) {
+        this.playDealerHand();
+      }
+    }
   }
 
   public dealerAction(move: DealerMove) {
@@ -259,13 +324,13 @@ export default class BlackjackGame {
       }
       case DealerMove.EndGame: {
         // TODO: End game
-        this.players.forEach(playerID => {
+        this._players.forEach(playerID => {
           this._hands.delete(playerID);
           this._currentHandIndex.delete(playerID);
           this._handsAwaitingBet.delete(playerID);
           this._playerBets.delete(playerID);
         });
-        this.gameInProgress = false;
+        this.resetGame(this._shouldShuffle);
         break;
       }
       case DealerMove.PlayHand: {
@@ -283,7 +348,7 @@ export default class BlackjackGame {
    * @returns the player's hands
    */
   public getPlayerHands(playerID: string): Card[][] {
-    if (!this.players.includes(playerID)) {
+    if (!this._players.includes(playerID)) {
       throw new Error(`${playerID} does not exist in this game`);
     }
     return this._hands.get(playerID) as Card[][];
@@ -293,17 +358,19 @@ export default class BlackjackGame {
    * Plays the dealer's hand out according to the rules.
    */
   public playDealerHand(): void {
-    if (this.playerMoveIndex < this.players.length) {
+    if (this.playerMoveIndex < this._players.length) {
       throw new Error('Not the dealers turn!');
     }
+    this.dealerHand[1].isFaceUp = true;
     let val = +this.handValues('dealer').slice(-2);
     while (val < 17) {
       const nextCard = this._deck.pop() as Card;
       this._dealerHand.push(nextCard);
-      val += nextCard.value === 11 && val < 11 ? 11 : nextCard.value;
+      // val += nextCard.value === 11 && val < 11 ? 11 : nextCard.value;
+      val = +this.handValues('dealer');
     }
     this._handleBets();
-    this.gameInProgress = false;
+    // this.gameInProgress = false;
   }
 
   /**
@@ -363,17 +430,21 @@ export default class BlackjackGame {
   // Currently doesn't do anything with the dealer's points
   private _handleBets(): void {
     const dealerHandVal = this.handValues('dealer')[0];
-    this.players.forEach(id => {
+    this._players.forEach(id => {
       const handVals = this.handValues(id);
       const bets = this._playerBets.get(id) as number[];
       let points = this.playerPoints.get(id) as number;
       handVals.forEach((val, index) => {
-        if (val > 21 || val < dealerHandVal) {
+        if (val > 21 || (val < dealerHandVal && dealerHandVal <= 21)) {
           // TODO: lose
           points -= bets[index];
-        } else if (val > dealerHandVal) {
+          this._results.push('lost');
+        } else if (val > dealerHandVal || dealerHandVal > 21) {
           // TODO: win
-          points += bets[index] * 1.5; // TODO: Check if blackjack
+          points += bets[index]; // TODO: Check if blackjack
+          this._results.push('won');
+        } else {
+          this._results.push('pushed');
         }
       });
       this.playerPoints.set(id, points);
@@ -385,9 +456,11 @@ export default class BlackjackGame {
       hands: Array.from(this.hands.values()),
       playerPoints: Array.from(this.playerPoints.values()),
       playerBets: Array.from(this.playerBets.values()),
-      playerMoveIndex: this.playerMoveIndex,
-      players: this.players,
+      playerMoveID: this.playerMoveIndex === -1 ? '' : this._players[this.playerMoveIndex],
+      players: this._players,
       isStarted: this.gameInProgress,
+      dealerHand: this._dealerHand,
+      results: this._results,
     };
     return game;
   }

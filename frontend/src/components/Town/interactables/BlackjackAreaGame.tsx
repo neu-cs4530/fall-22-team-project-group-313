@@ -18,9 +18,10 @@ export function BlackjackArea({
 }): JSX.Element {
   const townController = useTownController();
   const blackjackAreaController = useBlackjackAreaController(blackjackArea.name);
-  const [selectIsOpen, setSelectIsOpen] = useState(
-    blackjackAreaController.gameAction?.GameAction === 'gameStart',
-  );
+  const [selectIsOpen, setSelectIsOpen] = useState(true);
+
+  console.log('Controlla: ', blackjackAreaController.gameAction?.GameAction === 'Join');
+  console.log('isOpen: ', selectIsOpen);
 
   return (
     <BlackjackAreaModal

@@ -65,15 +65,16 @@ export enum BlackjackMove {
 }
 
 export enum Suit {
-  S = "S",
-  H = "H",
-  D = "D",
-  C = "C",
+  S = 'S',
+  H = 'H',
+  D = 'D',
+  C = 'C',
 }
 
 export type Card = {
   rank: string;
   suit: Suit;
+  isFaceUp: boolean
 };
 
 export interface ConversationArea {
@@ -107,9 +108,11 @@ export interface BlackjackGame {
   hands: Card[][][];
   playerPoints: number[];
   playerBets: number[][];
-  playerMoveIndex: number;
+  playerMoveID: string;
   players: string[];
   isStarted: boolean;
+  dealerHand: Card[];
+  results: string[];
 }
 
 export interface ServerToClientEvents {

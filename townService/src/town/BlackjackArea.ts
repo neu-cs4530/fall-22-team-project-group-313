@@ -37,7 +37,7 @@ export default class BlackjackArea extends InteractableArea {
   ) {
     super(id, coordinates, townEmitter);
     this.gameAction = gameAction;
-    this.game = new BlackjackGame(this.gameOccupantsByID);
+    this.game = new BlackjackGame();
   }
 
   /**
@@ -62,11 +62,22 @@ export default class BlackjackArea extends InteractableArea {
    * @param blackjackArea updated model
    */
   public updateModel(newModel: BlackjackModel) {
-    const occupants = newModel.occupantsByID;
-    const addedOccupants = occupants.filter(id => this.occupantsByID.indexOf(id) === -1); // Occupants added
+    console.log('NEWMODEL: ', newModel.gameOccupantsByID);
+    console.log('THIS: ', this.gameOccupantsByID);
+
+    const occupants = newModel.gameOccupantsByID;
+    const addedOccupants = occupants.filter(id => this.gameOccupantsByID.indexOf(id) === -1); // Occupants added
     addedOccupants.forEach(id => this.game.addPlayer(id));
-    const removedOccupants = this.occupantsByID.filter(id => occupants.indexOf(id) === -1); // Occupants removed
-    removedOccupants.forEach(id => this.game.removePlayer(id));
+    addedOccupants.forEach(occ => {
+      this.gameOccupantsByID.push(occ);
+    });
+    if (newModel.gameAction?.GameAction === 'Leave') {
+      const newOccupants = this.gameOccupantsByID.filter(
+        id => id !== newModel.gameAction?.playerID,
+      );
+      this.gameOccupantsByID = newOccupants;
+      console.log('NEW THIS: ', this.gameOccupantsByID);
+    }
     const newAction = newModel.gameAction;
     if (this.gameAction?.index !== newAction?.index) {
       if (newAction?.playerID === 'DEALER') {
@@ -76,7 +87,6 @@ export default class BlackjackArea extends InteractableArea {
       }
       this.gameAction = newModel.gameAction;
     }
-    console.log('Update Model: ', this.toModel());
     this._emitAreaChanged();
   }
 
@@ -109,7 +119,7 @@ export default class BlackjackArea extends InteractableArea {
       throw new Error(`Malformed viewing area ${name}`);
     }
     const rect: BoundingBox = { x: mapObject.x, y: mapObject.y, width, height };
-    const game = new BlackjackGame([]);
+    const game = new BlackjackGame();
     return new BlackjackArea(
       {
         id: name,

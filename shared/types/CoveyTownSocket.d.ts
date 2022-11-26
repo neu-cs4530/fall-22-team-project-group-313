@@ -113,7 +113,7 @@ export interface BlackjackGame {
   queue: string[];
   isStarted: boolean;
   dealerHand: Card[];
-  results: string[];
+  results: string[][];
 }
 
 export interface ServerToClientEvents {

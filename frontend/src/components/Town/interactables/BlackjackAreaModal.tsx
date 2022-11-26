@@ -90,8 +90,15 @@ export default function BlackjackAreaModal({
   const [cannotSplit, setCannotSplit] = useState(true);
   const [cannotDouble, setCannotDouble] = useState(true);
 
+  function playerInGame(playerId: string) {
+    return game.players.find(id => id === playerId);
+  }
+
   useEffect(() => {
-    if (blackjackAreaController.gameAction?.GameAction === 'EndGame') {
+    if (
+      blackjackAreaController.gameAction?.GameAction === 'EndGame' &&
+      playerInGame(coveyTownController.ourPlayer.id)
+    ) {
       setWagerHide(false);
       if (game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)] <= 25) {
         if (
@@ -124,23 +131,18 @@ export default function BlackjackAreaModal({
     coveyTownController.ourPlayer.id,
     game.playerPoints,
     game.players,
+    playerInGame,
     wagerValue,
   ]);
 
   useEffect(() => {
     setCannotDouble(true);
     setCannotSplit(true);
-    if (game.isStarted) {
+    if (game.isStarted && playerInGame(coveyTownController.ourPlayer.id)) {
       // Your player must have only one hand
       if (game.hands[game.players.indexOf(coveyTownController.ourPlayer.id)].length == 1) {
         // You must have two cards exactly
         if (game.hands[game.players.indexOf(coveyTownController.ourPlayer.id)][0].length == 2) {
-          console.log(
-            'BET: ',
-            game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)][
-              game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)].length - 1
-            ],
-          );
           if (
             // Bank value must allow it
             game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)][
@@ -178,6 +180,7 @@ export default function BlackjackAreaModal({
     game.playerBets,
     game.playerPoints,
     game.players,
+    playerInGame,
   ]);
 
   useEffect(() => {
@@ -266,7 +269,29 @@ export default function BlackjackAreaModal({
           {cards.map(card => {
             return printCard(card.rank, card.suit);
           })}
-          {/* <Text> {totalValue} </Text> */}
+          <Text> {handValue(cards)} </Text>
+        </HStack>
+      </GridItem>
+    );
+  }
+
+  function playerRowSplit(player: string, hands: Card[][], row: number) {
+    const handOne = hands[0];
+    const handTwo = hands[1];
+    return (
+      <GridItem colStart={1} rowStart={row} rowSpan={7} colSpan={1}>
+        <HStack spacing={10}>
+          <Text>
+            {coveyTownController.players.find(occupant => occupant.id === player)?.userName}
+          </Text>
+          {handOne.map(card => {
+            return printCard(card.rank, card.suit);
+          })}
+          <Text> {handValue(handOne)} </Text>
+          {handTwo.map(card => {
+            return printCard(card.rank, card.suit);
+          })}
+          <Text> {handValue(handTwo)} </Text>
         </HStack>
       </GridItem>
     );
@@ -276,7 +301,7 @@ export default function BlackjackAreaModal({
     const faceUpCards = cards.filter(card => card.isFaceUp);
     const faceDownCards = cards.filter(card => !card.isFaceUp);
     return (
-      <GridItem colStart={7} rowStart={9} rowSpan={2} colSpan={1}>
+      <GridItem colStart={5} rowStart={9} rowSpan={2} colSpan={1}>
         <HStack spacing={10}>
           <Text> Dealer </Text>
           {faceUpCards.map(card => {
@@ -285,24 +310,30 @@ export default function BlackjackAreaModal({
           {faceDownCards.map(() => {
             return printCard('', '');
           })}
-          {/* <Text> {totalValue} </Text> */}
+          <Text> {handValue(faceUpCards)} </Text>
         </HStack>
       </GridItem>
     );
   }
 
   function allHands(players: string[], hands: Card[][][]) {
-    console.log('PLAYERS: ', players);
-    console.log('HANDS: ', hands);
     return (
       <Grid h='200px' templateRows='repeat(25, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
         {players.map((player: string) => {
           {
-            return playerRow(
-              player,
-              hands.length === 0 ? [] : hands[players.indexOf(player)][0],
-              players.indexOf(player) * 4 + 2,
-            );
+            if (hands[players.indexOf(player)].length == 2) {
+              return playerRowSplit(
+                player,
+                hands[players.indexOf(player)],
+                players.indexOf(player) * 4 + 2,
+              );
+            } else {
+              return playerRow(
+                player,
+                hands.length === 0 ? [] : hands[players.indexOf(player)][0],
+                players.indexOf(player) * 4 + 2,
+              );
+            }
           }
         })}
         {dealer(game.dealerHand)}
@@ -356,12 +387,26 @@ export default function BlackjackAreaModal({
     }
   }
 
-  function playerInGame(playerId: string) {
-    console.log(
-      'Did I get em?: ',
-      game.players.find(id => id === playerId),
-    );
-    return game.players.find(id => id === playerId);
+  function results() {
+    if (game.results.length !== 0 && playerInGame(coveyTownController.ourPlayer.id)) {
+      if (game.results[game.players.indexOf(coveyTownController.ourPlayer.id)].length == 2) {
+        return (
+          <Text>
+            You {game.results[game.players.indexOf(coveyTownController.ourPlayer.id)][0]}{' '}
+            {game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)][0]} points and{' '}
+            {game.results[game.players.indexOf(coveyTownController.ourPlayer.id)][1]}{' '}
+            {game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)][1]} points
+          </Text>
+        );
+      } else {
+        return (
+          <Text>
+            You {game.results[game.players.indexOf(coveyTownController.ourPlayer.id)][0]}{' '}
+            {game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)][0]} points
+          </Text>
+        );
+      }
+    }
   }
 
   return (
@@ -402,10 +447,7 @@ export default function BlackjackAreaModal({
             Bank: {game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]} points
           </Text>
           <HStack hidden={game.results.length == 0}>
-            <Text>
-              You {game.results[game.players.indexOf(coveyTownController.ourPlayer.id)]}{' '}
-              {game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)]} points
-            </Text>
+            {results()}
             <Button
               onClick={() => {
                 updateGameModel(
@@ -429,7 +471,7 @@ export default function BlackjackAreaModal({
                     ? 0
                     : blackjackAreaController.gameAction.index + 1,
                   coveyTownController.ourPlayer.id,
-                  `Hit`,
+                  'Hit',
                 );
                 coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
               }}>

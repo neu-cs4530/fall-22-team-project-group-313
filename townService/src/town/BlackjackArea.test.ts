@@ -1,5 +1,6 @@
 import { mock, mockClear } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
+import BlackjackGame from '../lib/BlackjackGame';
 import Player from '../lib/Player';
 import { getLastEmittedEvent } from '../TestUtils';
 import { GameAction, TownEmitter } from '../types/CoveyTownSocket';
@@ -10,12 +11,17 @@ describe('BlackjackArea', () => {
   let testArea: BlackjackArea;
   const townEmitter = mock<TownEmitter>();
   const id = nanoid();
-  const gameAction: GameAction = { GameAction: 'test', playerID: 'testID' };
+  const gameAction: GameAction = { GameAction: 'gameStart', playerID: '-1', index: -1 };
+  const testGame = new BlackjackGame();
   let newPlayer: Player;
 
   beforeEach(() => {
     mockClear(townEmitter);
-    testArea = new BlackjackArea({ id, occupantsByID: [], gameAction }, testAreaBox, townEmitter);
+    testArea = new BlackjackArea(
+      { id, occupantsByID: [], gameOccupantsByID: [], game: testGame.toModel(), gameAction },
+      testAreaBox,
+      townEmitter,
+    );
     newPlayer = new Player(nanoid(), mock<TownEmitter>());
     testArea.add(newPlayer);
   });
@@ -24,7 +30,13 @@ describe('BlackjackArea', () => {
       expect(testArea.occupantsByID).toEqual([newPlayer.id]);
 
       const lastEmittedUpdate = getLastEmittedEvent(townEmitter, 'interactableUpdate');
-      expect(lastEmittedUpdate).toEqual({ id, occupantsByID: [newPlayer.id], gameAction });
+      expect(lastEmittedUpdate).toEqual({
+        id,
+        occupantsByID: [newPlayer.id],
+        game: testGame.toModel(),
+        gameOccupantsByID: [],
+        gameAction,
+      });
     });
     it("Sets the player's blackjackLabel and emits an update for their location", () => {
       expect(newPlayer.location.interactableID).toEqual(id);
@@ -42,7 +54,13 @@ describe('BlackjackArea', () => {
 
       expect(testArea.occupantsByID).toEqual([extraPlayer.id]);
       const lastEmittedUpdate = getLastEmittedEvent(townEmitter, 'interactableUpdate');
-      expect(lastEmittedUpdate).toEqual({ id, occupantsByID: [extraPlayer.id], gameAction });
+      expect(lastEmittedUpdate).toEqual({
+        id,
+        occupantsByID: [extraPlayer.id],
+        game: testGame.toModel(),
+        gameOccupantsByID: [],
+        gameAction,
+      });
     });
     it("Clears the player's blackjackLabel and emits an update for their location", () => {
       testArea.remove(newPlayer);
@@ -53,15 +71,23 @@ describe('BlackjackArea', () => {
     it('Clears the gameAction of the blackjack area when the last occupant leaves', () => {
       testArea.remove(newPlayer);
       const lastEmittedUpdate = getLastEmittedEvent(townEmitter, 'interactableUpdate');
-      expect(lastEmittedUpdate).toEqual({ id, occupantsByID: [], gameAction: undefined });
+      expect(lastEmittedUpdate).toEqual({
+        id,
+        occupantsByID: [],
+        game: testGame.toModel(),
+        gameOccupantsByID: [],
+        gameAction: undefined,
+      });
       expect(testArea.gameAction).toBeUndefined();
     });
   });
-  test('toModel sets the ID, occupantsByID, and gameAction and sets no other properties', () => {
+  test('toModel sets ID, occupantsByID, game, gameOccupantsByID, gameAction and no other properties', () => {
     const model = testArea.toModel();
     expect(model).toEqual({
       id,
       occupantsByID: [newPlayer.id],
+      game: testGame.toModel(),
+      gameOccupantsByID: [],
       gameAction,
     });
   });
@@ -86,7 +112,7 @@ describe('BlackjackArea', () => {
       );
       expect(val.boundingBox).toEqual({ x, y, width, height });
       expect(val.id).toEqual(name);
-      expect(val.gameAction).toBeUndefined();
+      expect(val.gameAction).toEqual(gameAction);
       expect(val.occupantsByID).toEqual([]);
     });
   });

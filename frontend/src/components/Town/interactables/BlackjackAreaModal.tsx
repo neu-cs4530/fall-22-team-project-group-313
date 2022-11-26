@@ -1,5 +1,8 @@
 import {
+  Box,
   Button,
+  Center,
+  Flex,
   Grid,
   GridItem,
   HStack,
@@ -15,7 +18,9 @@ import {
   NumberInput,
   NumberInputField,
   NumberInputStepper,
+  Spacer,
   Text,
+  VStack,
 } from '@chakra-ui/react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useGame } from '../../../classes/BlackjackAreaController';
@@ -23,6 +28,7 @@ import { useBlackjackAreaController } from '../../../classes/TownController';
 import useTownController from '../../../hooks/useTownController';
 import { Card, GameAction } from '../../../types/CoveyTownSocket';
 import BlackjackArea from './BlackjackArea';
+import { Global } from '@emotion/react';
 
 function cardValue(card: Card) {
   switch (card.rank) {
@@ -202,16 +208,16 @@ export default function BlackjackAreaModal({
     let valueConversion;
 
     switch (props.suit) {
-      case 'clubs':
+      case 'C':
         suitConversion = '♣︎';
         break;
-      case 'hearts':
+      case 'H':
         suitConversion = '♥︎';
         break;
-      case 'diamonds':
+      case 'D':
         suitConversion = '♦︎';
         break;
-      case 'spades':
+      case 'S':
         suitConversion = '♠︎';
         break;
       default:
@@ -318,20 +324,20 @@ export default function BlackjackAreaModal({
 
   function allHands(players: string[], hands: Card[][][]) {
     return (
-      <Grid h='200px' templateRows='repeat(25, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
+      <Grid h='200px' templateRows='repeat(31, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
         {players.map((player: string) => {
           {
             if (hands[players.indexOf(player)].length == 2) {
               return playerRowSplit(
                 player,
                 hands[players.indexOf(player)],
-                players.indexOf(player) * 4 + 2,
+                players.indexOf(player) * 6 + 2,
               );
             } else {
               return playerRow(
                 player,
                 hands.length === 0 ? [] : hands[players.indexOf(player)][0],
-                players.indexOf(player) * 4 + 2,
+                players.indexOf(player) * 6 + 2,
               );
             }
           }
@@ -409,6 +415,49 @@ export default function BlackjackAreaModal({
     }
   }
 
+  function lobby(name: string) {
+    return (
+      <Text fontSize={'20px'} align={'center'} color={'#d4af37'}>
+        {name}
+      </Text>
+    );
+  }
+
+  function leaderboardText(name: string, points: number | undefined) {
+    console.log('NAME:', points);
+    return (
+      <Text fontSize={'20px'} align={'center'} color={'#d4af37'}>
+        {name.split(':', 1)}: {points} points
+      </Text>
+    );
+  }
+
+  function historicalLeaderboard() {
+    const historicalLeaders = coveyTownController.blackjackHistoricalLeaders;
+
+    const historicalLeadersSorted = new Map(
+      [...historicalLeaders.entries()].sort((a, b) => b[1] - a[1]),
+    );
+
+    if (Array.from(historicalLeadersSorted.values()).length == 0) {
+      return (
+        <Text fontSize={'20px'} align={'center'} color={'#d4af37'}>
+          No historical leaders in this town
+        </Text>
+      );
+    } else {
+      return (
+        <VStack spacing={'20px'}>
+          {Array.from(historicalLeadersSorted.keys()).map(key => {
+            {
+              return leaderboardText(key, historicalLeadersSorted.get(key));
+            }
+          })}
+        </VStack>
+      );
+    }
+  }
+
   return (
     <Modal
       isOpen={isOpen}
@@ -426,16 +475,55 @@ export default function BlackjackAreaModal({
       }}
       size='full'>
       <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>BlackJackArea </ModalHeader>
+      <ModalContent backgroundColor={'#1d7349'}>
+        <ModalHeader textAlign={'center'} color={'#d4af37'} fontSize={'50px'}>
+          Blackjack Area
+        </ModalHeader>
         <ModalCloseButton hidden={game.isStarted && game.results.length === 0} />
+        <ModalBody hidden={game.isStarted} pb={6}>
+          <Flex marginTop={'60px'}>
+            <Box flex='1'>
+              <Text
+                marginBottom={'30px'}
+                align={'center'}
+                fontSize={'25px'}
+                fontWeight={'bold'}
+                color={'#d4af37'}>
+                Players in this Lobby:
+              </Text>
+              <VStack spacing={'20px'}>
+                {game.queue.map(id => {
+                  return lobby(
+                    coveyTownController.players.find(player => player.id === id)
+                      ?.userName as string,
+                  );
+                })}
+              </VStack>
+            </Box>
+            <Box flex='1'>
+              <Text
+                marginBottom={'30px'}
+                align={'center'}
+                fontSize={'25px'}
+                fontWeight={'bold'}
+                color={'#d4af37'}>
+                Historical Leaderboard:
+              </Text>
+              {historicalLeaderboard()}
+            </Box>
+          </Flex>
+        </ModalBody>
         <Button
+          width='35%'
+          alignSelf='center'
+          justifyContent='center'
+          marginBottom={'60px'}
           hidden={game.isStarted}
           onClick={() => {
             updateGameModel(0, 'DEALER', 'StartGame');
             coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
           }}>
-          Click to Start Game (ADD PLAYER NAMES TO LOBBY)
+          Click to Start Game for all Players in this Lobby
         </Button>
         <ModalBody hidden={!game.isStarted} pb={6}>
           {allHands(game.players, game.hands)}

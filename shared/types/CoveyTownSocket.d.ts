@@ -110,9 +110,10 @@ export interface BlackjackGame {
   playerBets: number[][];
   playerMoveID: string;
   players: string[];
+  queue: string[];
   isStarted: boolean;
   dealerHand: Card[];
-  results: string[];
+  results: string[][];
 }
 
 export interface ServerToClientEvents {

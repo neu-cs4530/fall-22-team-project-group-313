@@ -1,5 +1,15 @@
 // import { Container, Modal, ModalBody } from '@chakra-ui/react';
 import React, { useState } from 'react';
+import {
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalHeader,
+  ModalOverlay,
+  Text,
+  useToast,
+} from '@chakra-ui/react';
 import { useBlackjackAreaController, useInteractable } from '../../../classes/TownController';
 import useTownController from '../../../hooks/useTownController';
 import BlackjackAreaInteractable from './BlackjackArea';
@@ -20,16 +30,35 @@ export function BlackjackArea({
   const blackjackAreaController = useBlackjackAreaController(blackjackArea.name);
   const [selectIsOpen, setSelectIsOpen] = useState(true);
 
-  console.log('Controlla: ', blackjackAreaController.gameAction?.GameAction === 'Join');
-  console.log('isOpen: ', selectIsOpen);
+  const playerInGame =
+    blackjackAreaController.game.players.find(id => id === townController.ourPlayer.id) ||
+    blackjackAreaController.game.queue.find(id => id === townController.ourPlayer.id);
 
-  return (
-    <BlackjackAreaModal
-      isOpen={selectIsOpen}
-      close={() => setSelectIsOpen(false)}
-      blackjackArea={blackjackArea}
-    />
-  );
+  if (
+    blackjackAreaController.game.players.length + blackjackAreaController.game.queue.length < 5 ||
+    playerInGame
+  ) {
+    return (
+      <BlackjackAreaModal
+        isOpen={selectIsOpen}
+        close={() => setSelectIsOpen(false)}
+        blackjackArea={blackjackArea}
+      />
+    );
+  } else {
+    return (
+      <Modal isOpen={selectIsOpen} onClose={() => setSelectIsOpen(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Unable to join the game.</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            This Blackjack Area is currently full. Please try to rejoin later or find another area.
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    );
+  }
 }
 
 /**

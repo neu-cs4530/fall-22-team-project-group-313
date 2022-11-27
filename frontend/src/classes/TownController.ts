@@ -5,18 +5,21 @@ import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import TypedEmitter from 'typed-emitter';
 import Interactable from '../components/Town/Interactable';
+import BlackjackArea from '../components/Town/interactables/BlackjackArea';
 import ViewingArea from '../components/Town/interactables/ViewingArea';
 import { LoginController } from '../contexts/LoginControllerContext';
 import { TownsService, TownsServiceClient } from '../generated/client';
 import useTownController from '../hooks/useTownController';
 import {
+  BlackjackArea as BlackjackAreaModel,
   ChatMessage,
   CoveyTownSocket,
   PlayerLocation,
   TownSettingsUpdate,
   ViewingArea as ViewingAreaModel,
 } from '../types/CoveyTownSocket';
-import { isConversationArea, isViewingArea } from '../types/TypeUtils';
+import { isBlackjackArea, isConversationArea, isViewingArea } from '../types/TypeUtils';
+import BlackjackAreaController from './BlackjackAreaController';
 import ConversationAreaController from './ConversationAreaController';
 import PlayerController from './PlayerController';
 import ViewingAreaController from './ViewingAreaController';
@@ -69,6 +72,11 @@ export type TownEvents = {
    * the town controller's record of viewing areas.
    */
   viewingAreasChanged: (newViewingAreas: ViewingAreaController[]) => void;
+  /**
+   * An event that indicates that the set of viewing areas has changed. This event is emitted after updating
+   * the town controller's record of viewing areas.
+   */
+  blackjackAreasChanged: (newBlackjackAreas: BlackjackAreaController[]) => void;
   /**
    * An event that indicates that a new chat message has been received, which is the parameter passed to the listener
    */
@@ -190,6 +198,17 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
 
   private _viewingAreas: ViewingAreaController[] = [];
 
+  /**
+   * A Map of Player IDs to points. Maximum of 5 entrys.
+   */
+  private _blackjackHistoricalLeaders = new Map<string, number>();
+
+  /**
+   * The current list of blackjack areas in the town. Adding or removing blackjack areas might
+   * replace the array with a new one; clients should take note not to retain stale references.
+   */
+  private _blackjackAreasInternal: BlackjackAreaController[] = [];
+
   public constructor({ userName, townID, loginController }: ConnectionProperties) {
     super();
     this._townID = townID;
@@ -309,6 +328,23 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     this.emit('viewingAreasChanged', newViewingAreas);
   }
 
+  public get blackjackAreas() {
+    return this._blackjackAreasInternal;
+  }
+
+  private set _blackjackAreas(newBlackjackAreas: BlackjackAreaController[]) {
+    this._blackjackAreasInternal = newBlackjackAreas;
+    this.emit('blackjackAreasChanged', newBlackjackAreas);
+  }
+
+  public get blackjackHistoricalLeaders() {
+    return this._blackjackHistoricalLeaders;
+  }
+
+  public set blackjackHistoricalLeaders(historicalLeaders: Map<string, number>) {
+    this._blackjackHistoricalLeaders = historicalLeaders;
+  }
+
   /**
    * Begin interacting with an interactable object. Emits an event to all listeners.
    * @param interactedObj
@@ -401,14 +437,14 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
 
     /**
      * When an interactable's state changes, push that update into the relevant controller, which is assumed
-     * to be either a Viewing Area or a Conversation Area, and which is assumed to already be represented by a
-     * ViewingAreaController or ConversationAreaController that this TownController has.
+     * to be either a Viewing Area, Conversation Area, or Blackjack Area, and which is assumed to already be represented by a
+     * ViewingAreaController, ConversationAreaController, or BlackjackAreaController that this TownController has.
      *
      * If a conversation area transitions from empty to occupied (or occupied to empty), this handler will emit
      * a conversationAreasChagned event to listeners of this TownController.
      *
      * If the update changes properties of the interactable, the interactable is also expected to emit its own
-     * events (@see ViewingAreaController and @see ConversationAreaController)
+     * events (@see ViewingAreaController and @see ConversationAreaController and @see BlackjackAreaController)
      */
     this._socket.on('interactableUpdate', interactable => {
       if (isConversationArea(interactable)) {
@@ -427,6 +463,23 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
           eachArea => eachArea.id === interactable.id,
         );
         updatedViewingArea?.updateFrom(interactable);
+      } else if (isBlackjackArea(interactable)) {
+        const updatedBlackjackArea = this.blackjackAreas.find(c => c.id === interactable.id);
+        if (updatedBlackjackArea) {
+          const emptyNow = updatedBlackjackArea.isEmpty();
+          updatedBlackjackArea.gameAction = interactable.gameAction;
+          updatedBlackjackArea.game = interactable.game;
+          updatedBlackjackArea.occupants = this._playersByIDs(interactable.occupantsByID);
+          updatedBlackjackArea.gameOccupants = this._playersByIDs(interactable.gameOccupantsByID);
+          const emptyAfterChange = updatedBlackjackArea.isEmpty();
+          console.log('TOWNCONTROLLER LEADERS BEFORE: ', this.blackjackHistoricalLeaders);
+          console.log('TOWNCONTROLLER PLAYERS: ', this._players);
+          this.updateHistoricalLeaders();
+          console.log('TOWNCONTROLLER LEADERS AFTER: ', this._blackjackHistoricalLeaders);
+          if (emptyNow !== emptyAfterChange) {
+            this.emit('blackjackAreasChanged', this._blackjackAreasInternal);
+          }
+        }
       }
     });
   }
@@ -509,6 +562,60 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
   }
 
   /**
+   * Create a new blackjack area, sending the request to the townService. Throws an error if the request
+   * is not successful. Does not immediately update local state about the new blackjack area - it will be
+   * updated once the townService creates the area and emits an interactableUpdate
+   *
+   * @param newArea
+   */
+  async createBlackjackArea(newArea: BlackjackAreaModel) {
+    await this._townsService.createBlackjackArea(this.townID, this.sessionToken, newArea);
+  }
+
+  public updateHistoricalLeaders(): void {
+    let availableSpots = 5 - this._blackjackHistoricalLeaders.keys.length;
+    this._blackjackAreasInternal.forEach(bjArea => {
+      bjArea.game.players.forEach(player => {
+        const points = bjArea.game.playerPoints[bjArea.game.players.indexOf(player)];
+        const playerName =
+          (this.players.find(play => play.id === player) as PlayerController).userName +
+          ':' +
+          player;
+        if (availableSpots > 0) {
+          if (this.blackjackHistoricalLeaders.has(playerName)) {
+            if ((this.blackjackHistoricalLeaders.get(playerName) as number) < points) {
+              this.blackjackHistoricalLeaders.set(playerName, points);
+            }
+          } else {
+            this.blackjackHistoricalLeaders.set(playerName, points);
+            availableSpots--;
+          }
+        } else {
+          console.log('ELSE:', playerName);
+          if (this.blackjackHistoricalLeaders.has(playerName)) {
+            if ((this.blackjackHistoricalLeaders.get(playerName) as number) < points) {
+              this.blackjackHistoricalLeaders.set(playerName, points);
+            }
+          } else {
+            const min = Math.min(...Array.from(this.blackjackHistoricalLeaders.values()));
+            let key = '';
+            if (points > min) {
+              for (const item of this.blackjackHistoricalLeaders) {
+                if (item[1] == min) {
+                  key = item[0];
+                  break;
+                }
+              }
+              this.blackjackHistoricalLeaders.delete(key);
+              this.blackjackHistoricalLeaders.set(playerName, points);
+            }
+          }
+        }
+      });
+    });
+  }
+
+  /**
    * Disconnect from the town, notifying the townService that we are leaving and returning
    * to the login page
    */
@@ -540,6 +647,8 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
 
         this._conversationAreas = [];
         this._viewingAreas = [];
+        this._blackjackAreas = [];
+        console.log(initialData.interactables);
         initialData.interactables.forEach(eachInteractable => {
           if (isConversationArea(eachInteractable)) {
             this._conversationAreasInternal.push(
@@ -550,6 +659,13 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
             );
           } else if (isViewingArea(eachInteractable)) {
             this._viewingAreas.push(new ViewingAreaController(eachInteractable));
+          } else if (isBlackjackArea(eachInteractable)) {
+            this._blackjackAreasInternal.push(
+              BlackjackAreaController.fromBlackjackModel(
+                eachInteractable,
+                this._playersByIDs.bind(this),
+              ),
+            );
           }
         });
         this._userID = initialData.userID;
@@ -588,12 +704,50 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
   }
 
   /**
+   * Retrieve the blackjack area controller that corresponds to a blackjackModel, creating one if necessary
+   *
+   * @param blackjackArea
+   * @returns
+   */
+  public getBlackjackAreaController(blackjackArea: BlackjackArea): BlackjackAreaController {
+    const existingController = this._blackjackAreasInternal.find(
+      eachExistingArea => eachExistingArea.id === blackjackArea.name,
+    );
+    if (existingController) {
+      return existingController;
+    } else {
+      const newController = new BlackjackAreaController(blackjackArea.name, {
+        hands: [[[]]],
+        playerPoints: [],
+        playerBets: [[]],
+        playerMoveID: '',
+        players: [],
+        queue: [],
+        isStarted: false,
+        dealerHand: [],
+        results: [],
+      });
+      this._blackjackAreasInternal.push(newController);
+      return newController;
+    }
+  }
+
+  /**
    * Emit a viewing area update to the townService
    * @param viewingArea The Viewing Area Controller that is updated and should be emitted
    *    with the event
    */
   public emitViewingAreaUpdate(viewingArea: ViewingAreaController) {
     this._socket.emit('interactableUpdate', viewingArea.viewingAreaModel());
+  }
+
+  /**
+   * Emit a blackjack area update to the townService
+   * @param blackjackArea The Blackjack Area Controller that is updated and should be emitted
+   *    with the event
+   */
+  public emitBlackjackAreaUpdate(blackjackArea: BlackjackAreaController) {
+    this._socket.emit('interactableUpdate', blackjackArea.toBlackjackModel());
   }
 
   /**
@@ -699,6 +853,56 @@ export function useActiveConversationAreas(): ConversationAreaController[] {
     };
   }, [townController, setConversationAreas]);
   return conversationAreas;
+}
+
+/**
+ * A react hook to retrieve a blackjack area controller.
+ *
+ * This function will throw an error if the blackjack area controller does not exist.
+ *
+ * This hook relies on the TownControllerContext.
+ *
+ * @param blackjackAreaID The ID of the blackjack area to retrieve the controller for
+ *
+ * @throws Error if there is no blackjack area controller matching the specified ID
+ */
+export function useBlackjackAreaController(blackjackAreaID: string): BlackjackAreaController {
+  const townController = useTownController();
+
+  const blackjackArea = townController.blackjackAreas.find(
+    eachArea => eachArea.id == blackjackAreaID,
+  );
+
+  if (!blackjackArea) {
+    throw new Error(`Requested blackjack area ${blackjackAreaID} does not exist`);
+  }
+  return blackjackArea;
+}
+
+/**
+ * A react hook to retrieve the active blackjack areas. This hook will re-render any components
+ * that use it when the set of blackjack areas changes. It does *not* re-render its dependent components
+ * when the state of one of those areas changes - if that is desired, @see useBlackjackAreaGameAction and @see useBlackjackAreaOccupants
+ *
+ * This hook relies on the TownControllerContext.
+ *
+ * @returns the list of blackjack area controllers that are currently "active"
+ */
+export function useActiveBlackjackAreas(): BlackjackAreaController[] {
+  const townController = useTownController();
+  const [blackjackAreas, setBlackjackAreas] = useState<BlackjackAreaController[]>(
+    townController.blackjackAreas.filter(eachArea => !eachArea.isEmpty()),
+  );
+  useEffect(() => {
+    const updater = (allAreas: BlackjackAreaController[]) => {
+      setBlackjackAreas(allAreas.filter(eachArea => !eachArea.isEmpty()));
+    };
+    townController.addListener('blackjackAreasChanged', updater);
+    return () => {
+      townController.removeListener('blackjackAreasChanged', updater);
+    };
+  }, [townController, setBlackjackAreas]);
+  return blackjackAreas;
 }
 
 /**

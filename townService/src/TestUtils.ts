@@ -12,6 +12,7 @@ import {
 } from 'socket.io/dist/typed-events';
 import Player from './lib/Player';
 import {
+  BlackjackArea,
   BoundingBox,
   ClientToServerEvents,
   ConversationArea,
@@ -201,4 +202,8 @@ export function isViewingArea(interactable: Interactable): interactable is Viewi
 
 export function isConversationArea(interactable: Interactable): interactable is ConversationArea {
   return 'topic' in interactable;
+}
+
+export function isBlackjackArea(interactable: Interactable): interactable is BlackjackArea {
+  return 'gameAction' in interactable;
 }

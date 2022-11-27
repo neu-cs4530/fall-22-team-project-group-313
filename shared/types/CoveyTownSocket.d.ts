@@ -15,23 +15,23 @@ export type TownJoinResponse = {
   isPubliclyListed: boolean;
   /** Current state of interactables in this town */
   interactables: Interactable[];
-}
+};
 
-export type Interactable = ViewingArea | ConversationArea;
+export type Interactable = ViewingArea | ConversationArea | BlackjackArea;
 
 export type TownSettingsUpdate = {
   friendlyName?: string;
   isPubliclyListed?: boolean;
-}
+};
 
-export type Direction = 'front' | 'back' | 'left' | 'right';
+export type Direction = "front" | "back" | "left" | "right";
 export interface Player {
   id: string;
   userName: string;
   location: PlayerLocation;
-};
+}
 
-export type XY = { x: number, y: number };
+export type XY = { x: number; y: number };
 
 export interface PlayerLocation {
   /* The CENTER x coordinate of this player's location */
@@ -42,7 +42,7 @@ export interface PlayerLocation {
   rotation: Direction;
   moving: boolean;
   interactableID?: string;
-};
+}
 export type ChatMessage = {
   author: string;
   sid: string;
@@ -50,23 +50,70 @@ export type ChatMessage = {
   dateCreated: Date;
 };
 
+export type GameAction = {
+  GameAction: string;
+  playerID: string;
+  index: number;
+};
+
+export enum BlackjackMove {
+  Hit = "Hit",
+  Stay = "Stay",
+  Leave = "Surrender",
+  Split = "Split",
+  Double = "Double",
+}
+
+export enum Suit {
+  S = 'S',
+  H = 'H',
+  D = 'D',
+  C = 'C',
+}
+
+export type Card = {
+  rank: string;
+  suit: Suit;
+  isFaceUp: boolean
+};
+
 export interface ConversationArea {
   id: string;
   topic?: string;
   occupantsByID: string[];
-};
+}
 export interface BoundingBox {
   x: number;
   y: number;
   width: number;
   height: number;
-};
+}
 
 export interface ViewingArea {
   id: string;
   video?: string;
   isPlaying: boolean;
   elapsedTimeSec: number;
+}
+
+export interface BlackjackArea {
+  id: string;
+  occupantsByID: string[];
+  gameOccupantsByID: string[];
+  game: BlackjackGame;
+  gameAction?: GameAction;
+}
+
+export interface BlackjackGame {
+  hands: Card[][][];
+  playerPoints: number[];
+  playerBets: number[][];
+  playerMoveID: string;
+  players: string[];
+  queue: string[];
+  isStarted: boolean;
+  dealerHand: Card[];
+  results: string[][];
 }
 
 export interface ServerToClientEvents {

@@ -6,6 +6,7 @@ import {
   Grid,
   GridItem,
   HStack,
+  Icon,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -18,6 +19,7 @@ import {
   NumberInput,
   NumberInputField,
   NumberInputStepper,
+  SlideFade,
   Spacer,
   Text,
   VStack,
@@ -28,7 +30,6 @@ import { useBlackjackAreaController } from '../../../classes/TownController';
 import useTownController from '../../../hooks/useTownController';
 import { Card, GameAction } from '../../../types/CoveyTownSocket';
 import BlackjackArea from './BlackjackArea';
-import { Global } from '@emotion/react';
 
 function cardValue(card: Card) {
   switch (card.rank) {
@@ -262,20 +263,39 @@ export default function BlackjackAreaModal({
   }
 
   function printCard(value: string, suit: string) {
-    return <CreateCard suit={suit} value={value} />;
+    return (
+      <SlideFade in={isOpen} offsetX={'100px'}>
+        <CreateCard suit={suit} value={value} />
+      </SlideFade>
+    );
   }
 
   function playerRow(player: string, cards: Card[], row: number) {
+    let nameColor = 'black';
+    if (coveyTownController.ourPlayer.id === player) {
+      nameColor = '#d4af37';
+    }
+
+    let yourTurn = false;
+    if (game.playerMoveID === player) {
+      yourTurn = true;
+    }
     return (
       <GridItem colStart={1} rowStart={row} rowSpan={7} colSpan={1}>
-        <HStack spacing={10}>
-          <Text>
+        <HStack spacing={10} fontFamily={'Sans Serif'} fontSize={'30px'}>
+          <Text color={nameColor}>
+            {'   '}
             {coveyTownController.players.find(occupant => occupant.id === player)?.userName}
           </Text>
-          {cards.map(card => {
-            return printCard(card.rank, card.suit);
-          })}
+          <HStack spacing={0}>
+            {cards.map(card => {
+              return printCard(card.rank, card.suit);
+            })}
+          </HStack>
           <Text> {handValue(cards)} </Text>
+          <Text hidden={!yourTurn} color={'#d10f22'} fontSize={'75px'}>
+            ←
+          </Text>
         </HStack>
       </GridItem>
     );
@@ -284,20 +304,32 @@ export default function BlackjackAreaModal({
   function playerRowSplit(player: string, hands: Card[][], row: number) {
     const handOne = hands[0];
     const handTwo = hands[1];
+
+    let yourTurn = false;
+    if (game.playerMoveID === player) {
+      yourTurn = true;
+    }
     return (
       <GridItem colStart={1} rowStart={row} rowSpan={7} colSpan={1}>
-        <HStack spacing={10}>
+        <HStack spacing={10} fontFamily={'Sans Serif'} fontSize={'30px'}>
           <Text>
             {coveyTownController.players.find(occupant => occupant.id === player)?.userName}
           </Text>
-          {handOne.map(card => {
-            return printCard(card.rank, card.suit);
-          })}
+          <HStack spacing={0}>
+            {handOne.map(card => {
+              return printCard(card.rank, card.suit);
+            })}
+          </HStack>
           <Text> {handValue(handOne)} </Text>
-          {handTwo.map(card => {
-            return printCard(card.rank, card.suit);
-          })}
+          <HStack spacing={0}>
+            {handTwo.map(card => {
+              return printCard(card.rank, card.suit);
+            })}
+          </HStack>
           <Text> {handValue(handTwo)} </Text>
+          <Text hidden={!yourTurn} color={'#d10f22'} fontSize={'75px'}>
+            ←
+          </Text>
         </HStack>
       </GridItem>
     );
@@ -307,15 +339,17 @@ export default function BlackjackAreaModal({
     const faceUpCards = cards.filter(card => card.isFaceUp);
     const faceDownCards = cards.filter(card => !card.isFaceUp);
     return (
-      <GridItem colStart={5} rowStart={9} rowSpan={2} colSpan={1}>
-        <HStack spacing={10}>
+      <GridItem colStart={5} rowStart={12} rowSpan={2} colSpan={1}>
+        <HStack spacing={10} fontFamily={'Sans Serif'} fontSize={'30px'}>
           <Text> Dealer </Text>
-          {faceUpCards.map(card => {
-            return printCard(card.rank, card.suit);
-          })}
-          {faceDownCards.map(() => {
-            return printCard('', '');
-          })}
+          <HStack spacing={0}>
+            {faceUpCards.map(card => {
+              return printCard(card.rank, card.suit);
+            })}
+            {faceDownCards.map(() => {
+              return printCard('', '');
+            })}
+          </HStack>
           <Text> {handValue(faceUpCards)} </Text>
         </HStack>
       </GridItem>
@@ -351,8 +385,16 @@ export default function BlackjackAreaModal({
   function outputWager(minPoints: number, maxPoints: number) {
     return (
       <HStack>
-        <Text hidden={!wagerHide}>Current Wager: {wagerValue}</Text>
-        <Text hidden={wagerHide}>Wager:</Text>
+        <Text hidden={!wagerHide} className={'text-style'} color={'#d4af37'} fontSize={'40px'}>
+          Current Wager: {wagerValue} points
+        </Text>
+        <Text
+          hidden={wagerHide}
+          className='pull-left text-style'
+          color={'#d4af37'}
+          fontSize={'40px'}>
+          Wager:
+        </Text>
         <NumberInput
           defaultValue={wagerValue}
           clampValueOnBlur={true}
@@ -360,6 +402,8 @@ export default function BlackjackAreaModal({
           min={minPoints}
           max={maxPoints}
           hidden={wagerHide}
+          border={'#d4af37'}
+          textColor={'#d4af37'}
           onChange={(value: string) => setWagerValue(value as unknown as number)}>
           <NumberInputField />
           <NumberInputStepper>
@@ -417,7 +461,7 @@ export default function BlackjackAreaModal({
 
   function lobby(name: string) {
     return (
-      <Text fontSize={'20px'} align={'center'} color={'#d4af37'}>
+      <Text fontSize={'30px'} align={'center'} fontFamily={'Sans Serif'} color={'#d4af37'}>
         {name}
       </Text>
     );
@@ -426,7 +470,7 @@ export default function BlackjackAreaModal({
   function leaderboardText(name: string, points: number | undefined) {
     console.log('NAME:', points);
     return (
-      <Text fontSize={'20px'} align={'center'} color={'#d4af37'}>
+      <Text fontSize={'30px'} align={'center'} fontFamily={'Sans Serif'} color={'#d4af37'}>
         {name.split(':', 1)}: {points} points
       </Text>
     );
@@ -441,13 +485,13 @@ export default function BlackjackAreaModal({
 
     if (Array.from(historicalLeadersSorted.values()).length == 0) {
       return (
-        <Text fontSize={'20px'} align={'center'} color={'#d4af37'}>
+        <Text fontSize={'30px'} align={'center'} fontFamily={'Sans Serif'} color={'#d4af37'}>
           No historical leaders in this town
         </Text>
       );
     } else {
       return (
-        <VStack spacing={'20px'}>
+        <VStack spacing={'25px'}>
           {Array.from(historicalLeadersSorted.keys()).map(key => {
             {
               return leaderboardText(key, historicalLeadersSorted.get(key));
@@ -475,9 +519,11 @@ export default function BlackjackAreaModal({
       }}
       size='full'>
       <ModalOverlay />
-      <ModalContent backgroundColor={'#1d7349'}>
-        <ModalHeader textAlign={'center'} color={'#d4af37'} fontSize={'50px'}>
-          Blackjack Area
+      <ModalContent backgroundColor={'#1d7349'} className={'button-style'}>
+        <ModalHeader textAlign={'center'}>
+          <Text className={'text-style'} color={'#d4af37'} fontSize={'85px'}>
+            Blackjack Area
+          </Text>
         </ModalHeader>
         <ModalCloseButton hidden={game.isStarted && game.results.length === 0} />
         <ModalBody hidden={game.isStarted} pb={6}>
@@ -486,9 +532,10 @@ export default function BlackjackAreaModal({
               <Text
                 marginBottom={'30px'}
                 align={'center'}
-                fontSize={'25px'}
+                fontSize={'45px'}
                 fontWeight={'bold'}
-                color={'#d4af37'}>
+                color={'#d4af37'}
+                fontFamily={'Sans Serif'}>
                 Players in this Lobby:
               </Text>
               <VStack spacing={'20px'}>
@@ -504,9 +551,10 @@ export default function BlackjackAreaModal({
               <Text
                 marginBottom={'30px'}
                 align={'center'}
-                fontSize={'25px'}
+                fontSize={'45px'}
                 fontWeight={'bold'}
-                color={'#d4af37'}>
+                color={'#d4af37'}
+                fontFamily={'Sans Serif'}>
                 Historical Leaderboard:
               </Text>
               {historicalLeaderboard()}
@@ -514,7 +562,7 @@ export default function BlackjackAreaModal({
           </Flex>
         </ModalBody>
         <Button
-          width='35%'
+          width={'100%'}
           alignSelf='center'
           justifyContent='center'
           marginBottom={'60px'}
@@ -531,7 +579,7 @@ export default function BlackjackAreaModal({
         <ModalFooter
           hidden={!game.isStarted || !playerInGame(coveyTownController.ourPlayer.id)}
           justifyContent={'space-between'}>
-          <Text className='pull-left'>
+          <Text className='pull-left text-style' color={'#d4af37'} fontSize={'40px'}>
             Bank: {game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]} points
           </Text>
           <HStack hidden={game.results.length == 0}>
@@ -608,8 +656,13 @@ export default function BlackjackAreaModal({
             </Button>
           </HStack>
         </ModalFooter>
-        <ModalFooter hidden={!game.isStarted || !!playerInGame(coveyTownController.ourPlayer.id)}>
-          The hand is already in progress. Please wait for the next hand to join the game.
+        <ModalFooter
+          alignSelf={'center'}
+          hidden={!game.isStarted || !!playerInGame(coveyTownController.ourPlayer.id)}
+          color={'#d4af37'}
+          fontSize={'40px'}
+          className='text-style'>
+          The hand is in progress. Please wait for the next hand to join the game.
         </ModalFooter>
       </ModalContent>
     </Modal>

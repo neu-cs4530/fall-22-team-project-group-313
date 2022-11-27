@@ -1,12 +1,10 @@
 import {
   Box,
   Button,
-  Center,
   Flex,
   Grid,
   GridItem,
   HStack,
-  Icon,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -14,13 +12,11 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
   SlideFade,
-  Spacer,
+  Slider,
+  SliderFilledTrack,
+  SliderThumb,
+  SliderTrack,
   Text,
   VStack,
 } from '@chakra-ui/react';
@@ -30,6 +26,7 @@ import { useBlackjackAreaController } from '../../../classes/TownController';
 import useTownController from '../../../hooks/useTownController';
 import { Card, GameAction } from '../../../types/CoveyTownSocket';
 import BlackjackArea from './BlackjackArea';
+// import "@fontsource/croissant-one"
 
 function cardValue(card: Card) {
   switch (card.rank) {
@@ -203,12 +200,10 @@ export default function BlackjackAreaModal({
     close();
   }, [coveyTownController, close]);
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  const CreateCard = (props: { suit: string; value: string }) => {
+  function createCard(suit: string, value: string) {
     let suitConversion;
-    let valueConversion;
 
-    switch (props.suit) {
+    switch (suit) {
       case 'C':
         suitConversion = '♣︎';
         break;
@@ -228,11 +223,11 @@ export default function BlackjackAreaModal({
       return (
         <div className='card card-black'>
           <div className='card-tl'>
-            <div className='card-value'>{props.value}</div>
+            <div className='card-value'>{value}</div>
             <div className='card-suit'>{suitConversion}</div>
           </div>
           <div className='card-br'>
-            <div className='card-value'>{props.value}</div>
+            <div className='card-value'>{value}</div>
             <div className='card-suit'>{suitConversion}</div>
           </div>
         </div>
@@ -241,17 +236,17 @@ export default function BlackjackAreaModal({
       return (
         <div className='card card-red'>
           <div className='card-tl'>
-            <div className='card-value'>{props.value}</div>
+            <div className='card-value'>{value}</div>
             <div className='card-suit'>{suitConversion}</div>
           </div>
           <div className='card-br'>
-            <div className='card-value'>{props.value}</div>
+            <div className='card-value'>{value}</div>
             <div className='card-suit'>{suitConversion}</div>
           </div>
         </div>
       );
     }
-  };
+  }
 
   function updateGameModel(index: number, player: string, action: string) {
     const a: GameAction = {
@@ -265,7 +260,7 @@ export default function BlackjackAreaModal({
   function printCard(value: string, suit: string) {
     return (
       <SlideFade in={isOpen} offsetX={'100px'}>
-        <CreateCard suit={suit} value={value} />
+        {createCard(suit, value)}
       </SlideFade>
     );
   }
@@ -386,7 +381,7 @@ export default function BlackjackAreaModal({
     return (
       <HStack>
         <Text hidden={!wagerHide} className={'text-style'} color={'#d4af37'} fontSize={'40px'}>
-          Current Wager: {wagerValue} points
+          Current Wager: {cannotDouble || cannotSplit ? wagerValue : wagerValue * 2} points
         </Text>
         <Text
           hidden={wagerHide}
@@ -395,22 +390,21 @@ export default function BlackjackAreaModal({
           fontSize={'40px'}>
           Wager:
         </Text>
-        <NumberInput
-          defaultValue={wagerValue}
-          clampValueOnBlur={true}
-          id='numInput'
+        <Slider
+          width='400px'
+          hidden={wagerHide}
+          focusThumbOnChange={false}
           min={minPoints}
           max={maxPoints}
-          hidden={wagerHide}
-          border={'#d4af37'}
-          textColor={'#d4af37'}
-          onChange={(value: string) => setWagerValue(value as unknown as number)}>
-          <NumberInputField />
-          <NumberInputStepper>
-            <NumberIncrementStepper />
-            <NumberDecrementStepper />
-          </NumberInputStepper>
-        </NumberInput>
+          defaultValue={wagerValue}
+          onChange={(value: number) => setWagerValue(value)}>
+          <SliderTrack color={'#d4af37'}>
+            <SliderFilledTrack background={'#d4af37'} />
+          </SliderTrack>
+          <SliderThumb fontSize='sm' boxSize='30px' opacity='90%'>
+            {wagerValue}
+          </SliderThumb>
+        </Slider>
         <Button
           hidden={wagerHide}
           onClick={() => {
@@ -431,7 +425,10 @@ export default function BlackjackAreaModal({
   }
 
   function wager(points: number) {
-    if (game.isStarted) {
+    if (
+      game.isStarted &&
+      !(game.results.length !== 0 && playerInGame(coveyTownController.ourPlayer.id))
+    ) {
       if (points <= 25) return outputWager(1, points);
       else return outputWager(Math.trunc(points * 0.05), Math.trunc(points * 0.25));
     }
@@ -441,7 +438,7 @@ export default function BlackjackAreaModal({
     if (game.results.length !== 0 && playerInGame(coveyTownController.ourPlayer.id)) {
       if (game.results[game.players.indexOf(coveyTownController.ourPlayer.id)].length == 2) {
         return (
-          <Text>
+          <Text className='text-style' color={'#d4af37'} fontSize={'20px'}>
             You {game.results[game.players.indexOf(coveyTownController.ourPlayer.id)][0]}{' '}
             {game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)][0]} points and{' '}
             {game.results[game.players.indexOf(coveyTownController.ourPlayer.id)][1]}{' '}
@@ -450,7 +447,7 @@ export default function BlackjackAreaModal({
         );
       } else {
         return (
-          <Text>
+          <Text className='text-style' color={'#d4af37'} fontSize={'20px'}>
             You {game.results[game.players.indexOf(coveyTownController.ourPlayer.id)][0]}{' '}
             {game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)][0]} points
           </Text>
@@ -595,7 +592,7 @@ export default function BlackjackAreaModal({
                 );
                 coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
               }}>
-              Click this button to start a new hand!
+              Click to start a new hand
             </Button>
           </HStack>
           {wager(game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)])}

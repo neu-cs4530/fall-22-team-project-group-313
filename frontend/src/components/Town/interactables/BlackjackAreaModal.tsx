@@ -381,7 +381,7 @@ export default function BlackjackAreaModal({
     return (
       <HStack>
         <Text hidden={!wagerHide} className={'text-style'} color={'#d4af37'} fontSize={'40px'}>
-          Current Wager: {cannotDouble || cannotSplit ? wagerValue : wagerValue * 2} points
+          Current Wager: {wagerValue} points
         </Text>
         <Text
           hidden={wagerHide}
@@ -465,7 +465,6 @@ export default function BlackjackAreaModal({
   }
 
   function leaderboardText(name: string, points: number | undefined) {
-    console.log('NAME:', points);
     return (
       <Text fontSize={'30px'} align={'center'} fontFamily={'Sans Serif'} color={'#d4af37'}>
         {name.split(':', 1)}: {points} points
@@ -633,6 +632,7 @@ export default function BlackjackAreaModal({
                   coveyTownController.ourPlayer.id,
                   'Split',
                 );
+                setWagerValue(wagerValue * 2);
                 coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
               }}>
               Split
@@ -647,6 +647,7 @@ export default function BlackjackAreaModal({
                   coveyTownController.ourPlayer.id,
                   'Double',
                 );
+                setWagerValue(wagerValue * 2);
                 coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
               }}>
               Double

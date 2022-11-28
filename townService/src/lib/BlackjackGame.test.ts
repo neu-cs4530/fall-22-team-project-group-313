@@ -87,8 +87,6 @@ describe('BlackjackGame', () => {
       expect(testGame.playerMoveIndex).toEqual(1);
     });
     it('Hit, hand value increases in no shuffle game', () => {
-      // console.log(noShuffleGame._deck);
-      // console.log(noShuffleGame.getPlayerHands(playerOne.id)[0]);
       const handOneVal = noShuffleGame.handValues(playerOne.id)[0];
       expect(handOneVal).toEqual(20);
       noShuffleGame.playerMove(playerOne.id, BlackjackMove.Hit);

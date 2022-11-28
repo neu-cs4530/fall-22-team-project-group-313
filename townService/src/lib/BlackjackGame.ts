@@ -60,7 +60,7 @@ export default class BlackjackGame {
 
   private _shouldShuffle: boolean;
 
-  public _results: string[][];
+  public _results: Map<string, string[]>;
 
   constructor(numDecks?: number, shuffle?: boolean) {
     this._players = [];
@@ -73,7 +73,7 @@ export default class BlackjackGame {
     this.playerPoints = new Map<string, number>();
     this._newPlayers = [];
     this._shouldShuffle = shuffle ?? true;
-    this._results = [];
+    this._results = new Map<string, string[]>();
   }
 
   public get hands() {
@@ -142,10 +142,10 @@ export default class BlackjackGame {
       this._currentHandIndex.set(id, 0);
       this._playerBets.set(id, []); // To be updated later
       this._handsAwaitingBet.set(id, 0);
+      this._results.set(id, []);
     });
     this.gameInProgress = true;
     this.playerMoveIndex = -1;
-    this._results = [];
     this._dealerHand = [];
   }
 
@@ -263,7 +263,7 @@ export default class BlackjackGame {
           this.playerPoints = new Map<string, number>();
           this._newPlayers = [];
           this._shouldShuffle = true;
-          this._results = [];
+          this._results = new Map<string, string[]>();
           this.gameInProgress = false;
           break;
         } else {
@@ -276,7 +276,8 @@ export default class BlackjackGame {
           this._currentHandIndex.delete(playerID);
           this._handsAwaitingBet.delete(playerID);
           this._playerBets.delete(playerID);
-          // this._playerPoints.delete(playerID);
+          this.playerPoints.delete(playerID);
+          this._results.delete(playerID);
           // Don't say turnOver = true as index should autocompensate
           break;
         }
@@ -309,7 +310,10 @@ export default class BlackjackGame {
         }
       }
 
-      if (this.playerMoveIndex >= this._players.length) {
+      if (
+        this.playerMoveIndex >= this._players.length &&
+        this._results.get(this._players[0])?.length === 0
+      ) {
         this.playDealerHand();
       }
     }
@@ -446,8 +450,8 @@ export default class BlackjackGame {
         } else {
           results.push('pushed');
         }
-        this._results.push(results);
       });
+      this._results.set(id, results);
       this.playerPoints.set(id, points);
     });
   }
@@ -462,7 +466,7 @@ export default class BlackjackGame {
       queue: this._newPlayers,
       isStarted: this.gameInProgress,
       dealerHand: this._dealerHand,
-      results: this._results,
+      results: Array.from(this._results.values()),
     };
     return game;
   }

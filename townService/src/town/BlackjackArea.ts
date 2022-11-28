@@ -6,7 +6,6 @@ import {
   BoundingBox,
   BlackjackArea as BlackjackModel,
   TownEmitter,
-  BlackjackGame as BlackjackGameModel,
 } from '../types/CoveyTownSocket';
 import InteractableArea from './InteractableArea';
 
@@ -62,8 +61,8 @@ export default class BlackjackArea extends InteractableArea {
    * @param blackjackArea updated model
    */
   public updateModel(newModel: BlackjackModel) {
-    console.log('NEWMODEL: ', newModel.gameOccupantsByID);
-    console.log('THIS: ', this.gameOccupantsByID);
+    // console.log('NEWMODEL: ', newModel.gameOccupantsByID);
+    // console.log('THIS: ', this.gameOccupantsByID);
 
     const occupants = newModel.gameOccupantsByID;
     const addedOccupants = occupants.filter(id => this.gameOccupantsByID.indexOf(id) === -1); // Occupants added
@@ -76,7 +75,7 @@ export default class BlackjackArea extends InteractableArea {
         id => id !== newModel.gameAction?.playerID,
       );
       this.gameOccupantsByID = newOccupants;
-      console.log('NEW THIS: ', this.gameOccupantsByID);
+      // console.log('NEW THIS: ', this.gameOccupantsByID);
     }
     const newAction = newModel.gameAction;
     if (this.gameAction?.index !== newAction?.index) {

@@ -1,5 +1,7 @@
 import {
+  Box,
   Button,
+  Flex,
   Grid,
   GridItem,
   HStack,
@@ -10,12 +12,14 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
+  SlideFade,
+  Slider,
+  SliderFilledTrack,
+  SliderThumb,
+  SliderTrack,
   Text,
+  Tooltip,
+  VStack,
 } from '@chakra-ui/react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useGame } from '../../../classes/BlackjackAreaController';
@@ -23,6 +27,7 @@ import { useBlackjackAreaController } from '../../../classes/TownController';
 import useTownController from '../../../hooks/useTownController';
 import { Card, GameAction } from '../../../types/CoveyTownSocket';
 import BlackjackArea from './BlackjackArea';
+// import "@fontsource/croissant-one"
 
 function cardValue(card: Card) {
   switch (card.rank) {
@@ -196,22 +201,20 @@ export default function BlackjackAreaModal({
     close();
   }, [coveyTownController, close]);
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  const CreateCard = (props: { suit: string; value: string }) => {
+  function createCard(suit: string, value: string) {
     let suitConversion;
-    let valueConversion;
 
-    switch (props.suit) {
-      case 'clubs':
+    switch (suit) {
+      case 'C':
         suitConversion = '♣︎';
         break;
-      case 'hearts':
+      case 'H':
         suitConversion = '♥︎';
         break;
-      case 'diamonds':
+      case 'D':
         suitConversion = '♦︎';
         break;
-      case 'spades':
+      case 'S':
         suitConversion = '♠︎';
         break;
       default:
@@ -221,11 +224,11 @@ export default function BlackjackAreaModal({
       return (
         <div className='card card-black'>
           <div className='card-tl'>
-            <div className='card-value'>{props.value}</div>
+            <div className='card-value'>{value}</div>
             <div className='card-suit'>{suitConversion}</div>
           </div>
           <div className='card-br'>
-            <div className='card-value'>{props.value}</div>
+            <div className='card-value'>{value}</div>
             <div className='card-suit'>{suitConversion}</div>
           </div>
         </div>
@@ -234,17 +237,17 @@ export default function BlackjackAreaModal({
       return (
         <div className='card card-red'>
           <div className='card-tl'>
-            <div className='card-value'>{props.value}</div>
+            <div className='card-value'>{value}</div>
             <div className='card-suit'>{suitConversion}</div>
           </div>
           <div className='card-br'>
-            <div className='card-value'>{props.value}</div>
+            <div className='card-value'>{value}</div>
             <div className='card-suit'>{suitConversion}</div>
           </div>
         </div>
       );
     }
-  };
+  }
 
   function updateGameModel(index: number, player: string, action: string) {
     const a: GameAction = {
@@ -256,20 +259,43 @@ export default function BlackjackAreaModal({
   }
 
   function printCard(value: string, suit: string) {
-    return <CreateCard suit={suit} value={value} />;
+    return (
+      <SlideFade in={isOpen} offsetX={'100px'}>
+        {createCard(suit, value)}
+      </SlideFade>
+    );
   }
 
   function playerRow(player: string, cards: Card[], row: number) {
+    let nameColor = 'black';
+    if (coveyTownController.ourPlayer.id === player) {
+      nameColor = '#d4af37';
+    }
+
+    let yourTurn = false;
+    if (game.playerMoveID === player) {
+      yourTurn = true;
+    }
     return (
       <GridItem colStart={1} rowStart={row} rowSpan={7} colSpan={1}>
-        <HStack spacing={10}>
-          <Text>
+        <HStack spacing={10} fontFamily={'Sans Serif'} fontSize={'30px'}>
+          <Text color={nameColor}>
+            {'   '}
             {coveyTownController.players.find(occupant => occupant.id === player)?.userName}
           </Text>
-          {cards.map(card => {
-            return printCard(card.rank, card.suit);
-          })}
-          <Text> {handValue(cards)} </Text>
+          <HStack spacing={0}>
+            {cards.map(card => {
+              return printCard(card.rank, card.suit);
+            })}
+          </HStack>
+          <Tooltip label='Total Hand Value'>
+            <Text> {handValue(cards)} </Text>
+          </Tooltip>
+          <Tooltip label='Waiting for this player'>
+            <Text hidden={!yourTurn} color={'#d10f22'} fontSize={'75px'}>
+              ←
+            </Text>
+          </Tooltip>
         </HStack>
       </GridItem>
     );
@@ -278,20 +304,32 @@ export default function BlackjackAreaModal({
   function playerRowSplit(player: string, hands: Card[][], row: number) {
     const handOne = hands[0];
     const handTwo = hands[1];
+
+    let yourTurn = false;
+    if (game.playerMoveID === player) {
+      yourTurn = true;
+    }
     return (
       <GridItem colStart={1} rowStart={row} rowSpan={7} colSpan={1}>
-        <HStack spacing={10}>
+        <HStack spacing={10} fontFamily={'Sans Serif'} fontSize={'30px'}>
           <Text>
             {coveyTownController.players.find(occupant => occupant.id === player)?.userName}
           </Text>
-          {handOne.map(card => {
-            return printCard(card.rank, card.suit);
-          })}
+          <HStack spacing={0}>
+            {handOne.map(card => {
+              return printCard(card.rank, card.suit);
+            })}
+          </HStack>
           <Text> {handValue(handOne)} </Text>
-          {handTwo.map(card => {
-            return printCard(card.rank, card.suit);
-          })}
+          <HStack spacing={0}>
+            {handTwo.map(card => {
+              return printCard(card.rank, card.suit);
+            })}
+          </HStack>
           <Text> {handValue(handTwo)} </Text>
+          <Text hidden={!yourTurn} color={'#d10f22'} fontSize={'75px'}>
+            ←
+          </Text>
         </HStack>
       </GridItem>
     );
@@ -301,16 +339,20 @@ export default function BlackjackAreaModal({
     const faceUpCards = cards.filter(card => card.isFaceUp);
     const faceDownCards = cards.filter(card => !card.isFaceUp);
     return (
-      <GridItem colStart={5} rowStart={9} rowSpan={2} colSpan={1}>
-        <HStack spacing={10}>
+      <GridItem colStart={5} rowStart={12} rowSpan={2} colSpan={1}>
+        <HStack spacing={10} fontFamily={'Sans Serif'} fontSize={'30px'}>
           <Text> Dealer </Text>
-          {faceUpCards.map(card => {
-            return printCard(card.rank, card.suit);
-          })}
-          {faceDownCards.map(() => {
-            return printCard('', '');
-          })}
-          <Text> {handValue(faceUpCards)} </Text>
+          <HStack spacing={0}>
+            {faceUpCards.map(card => {
+              return printCard(card.rank, card.suit);
+            })}
+            {faceDownCards.map(() => {
+              return printCard('', '');
+            })}
+          </HStack>
+          <Tooltip label='Total Hand Value'>
+            <Text> {handValue(faceUpCards)} </Text>
+          </Tooltip>
         </HStack>
       </GridItem>
     );
@@ -318,20 +360,20 @@ export default function BlackjackAreaModal({
 
   function allHands(players: string[], hands: Card[][][]) {
     return (
-      <Grid h='200px' templateRows='repeat(25, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
+      <Grid h='200px' templateRows='repeat(31, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
         {players.map((player: string) => {
           {
             if (hands[players.indexOf(player)].length == 2) {
               return playerRowSplit(
                 player,
                 hands[players.indexOf(player)],
-                players.indexOf(player) * 4 + 2,
+                players.indexOf(player) * 6 + 2,
               );
             } else {
               return playerRow(
                 player,
                 hands.length === 0 ? [] : hands[players.indexOf(player)][0],
-                players.indexOf(player) * 4 + 2,
+                players.indexOf(player) * 6 + 2,
               );
             }
           }
@@ -345,22 +387,33 @@ export default function BlackjackAreaModal({
   function outputWager(minPoints: number, maxPoints: number) {
     return (
       <HStack>
-        <Text hidden={!wagerHide}>Current Wager: {wagerValue}</Text>
-        <Text hidden={wagerHide}>Wager:</Text>
-        <NumberInput
-          defaultValue={wagerValue}
-          clampValueOnBlur={true}
-          id='numInput'
+        <Text hidden={!wagerHide} className={'text-style'} color={'#d4af37'} fontSize={'40px'}>
+          Current Wager: {wagerValue} points
+        </Text>
+        <Tooltip label='Use the slider to select the amount you would like to wager and then press Submit. Note: Wagers are kept within the range of 5% - 25% of the bank. If your bank equals 25 points or less, then you can wager any amount between 0 and the max.'>
+          <Text
+            hidden={wagerHide}
+            className='pull-left text-style'
+            color={'#d4af37'}
+            fontSize={'40px'}>
+            Wager:
+          </Text>
+        </Tooltip>
+        <Slider
+          width='400px'
+          hidden={wagerHide}
+          focusThumbOnChange={false}
           min={minPoints}
           max={maxPoints}
-          hidden={wagerHide}
-          onChange={(value: string) => setWagerValue(value as unknown as number)}>
-          <NumberInputField />
-          <NumberInputStepper>
-            <NumberIncrementStepper />
-            <NumberDecrementStepper />
-          </NumberInputStepper>
-        </NumberInput>
+          defaultValue={wagerValue}
+          onChange={(value: number) => setWagerValue(value)}>
+          <SliderTrack color={'#d4af37'}>
+            <SliderFilledTrack background={'#d4af37'} />
+          </SliderTrack>
+          <SliderThumb fontSize='sm' boxSize='30px' opacity='90%'>
+            {wagerValue}
+          </SliderThumb>
+        </Slider>
         <Button
           hidden={wagerHide}
           onClick={() => {
@@ -381,7 +434,10 @@ export default function BlackjackAreaModal({
   }
 
   function wager(points: number) {
-    if (game.isStarted) {
+    if (
+      game.isStarted &&
+      !(game.results.length !== 0 && playerInGame(coveyTownController.ourPlayer.id))
+    ) {
       if (points <= 25) return outputWager(1, points);
       else return outputWager(Math.trunc(points * 0.05), Math.trunc(points * 0.25));
     }
@@ -391,7 +447,7 @@ export default function BlackjackAreaModal({
     if (game.results.length !== 0 && playerInGame(coveyTownController.ourPlayer.id)) {
       if (game.results[game.players.indexOf(coveyTownController.ourPlayer.id)].length == 2) {
         return (
-          <Text>
+          <Text className='text-style' color={'#d4af37'} fontSize={'20px'}>
             You {game.results[game.players.indexOf(coveyTownController.ourPlayer.id)][0]}{' '}
             {game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)][0]} points and{' '}
             {game.results[game.players.indexOf(coveyTownController.ourPlayer.id)][1]}{' '}
@@ -400,12 +456,54 @@ export default function BlackjackAreaModal({
         );
       } else {
         return (
-          <Text>
+          <Text className='text-style' color={'#d4af37'} fontSize={'20px'}>
             You {game.results[game.players.indexOf(coveyTownController.ourPlayer.id)][0]}{' '}
             {game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)][0]} points
           </Text>
         );
       }
+    }
+  }
+
+  function lobby(name: string) {
+    return (
+      <Text fontSize={'30px'} align={'center'} fontFamily={'Sans Serif'} color={'#d4af37'}>
+        {name}
+      </Text>
+    );
+  }
+
+  function leaderboardText(name: string, points: number | undefined) {
+    return (
+      <Text fontSize={'30px'} align={'center'} fontFamily={'Sans Serif'} color={'#d4af37'}>
+        {name.split(':', 1)}: {points} points
+      </Text>
+    );
+  }
+
+  function historicalLeaderboard() {
+    const historicalLeaders = coveyTownController.blackjackHistoricalLeaders;
+
+    const historicalLeadersSorted = new Map(
+      [...historicalLeaders.entries()].sort((a, b) => b[1] - a[1]),
+    );
+
+    if (Array.from(historicalLeadersSorted.values()).length == 0) {
+      return (
+        <Text fontSize={'30px'} align={'center'} fontFamily={'Sans Serif'} color={'#d4af37'}>
+          No historical leaders in this town
+        </Text>
+      );
+    } else {
+      return (
+        <VStack spacing={'25px'}>
+          {Array.from(historicalLeadersSorted.keys()).map(key => {
+            {
+              return leaderboardText(key, historicalLeadersSorted.get(key));
+            }
+          })}
+        </VStack>
+      );
     }
   }
 
@@ -426,16 +524,65 @@ export default function BlackjackAreaModal({
       }}
       size='full'>
       <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>BlackJackArea </ModalHeader>
+      <ModalContent backgroundColor={'#1d7349'} className={'button-style'}>
+        <ModalHeader textAlign={'center'}>
+          <Tooltip
+            label='Basic Rules: Your goal in blackjack is to beat the dealer’s hand without going over 21. 
+You’ll receive 2 cards at the beginning of each round, and you’ll add up the values of these cards. 
+Cards 2-10 have face value; King, Queen, Jack are worth 10; and Aces are either a 1 or an 11 — it’s up to you to decide.
+The dealer also draws two cards. The aim of the game is to beat his hand (have a higher hand) without going over 21.'>
+            <Text className={'text-style'} color={'#d4af37'} fontSize={'85px'}>
+              Blackjack Area
+            </Text>
+          </Tooltip>
+        </ModalHeader>
         <ModalCloseButton hidden={game.isStarted && game.results.length === 0} />
+        <ModalBody hidden={game.isStarted} pb={6}>
+          <Flex marginTop={'60px'}>
+            <Box flex='1'>
+              <Text
+                marginBottom={'30px'}
+                align={'center'}
+                fontSize={'45px'}
+                fontWeight={'bold'}
+                color={'#d4af37'}
+                fontFamily={'Sans Serif'}>
+                Players in this Lobby:
+              </Text>
+              <VStack spacing={'20px'}>
+                {game.queue.map(id => {
+                  return lobby(
+                    coveyTownController.players.find(player => player.id === id)
+                      ?.userName as string,
+                  );
+                })}
+              </VStack>
+            </Box>
+            <Box flex='1'>
+              <Text
+                marginBottom={'30px'}
+                align={'center'}
+                fontSize={'45px'}
+                fontWeight={'bold'}
+                color={'#d4af37'}
+                fontFamily={'Sans Serif'}>
+                Historical Leaderboard:
+              </Text>
+              {historicalLeaderboard()}
+            </Box>
+          </Flex>
+        </ModalBody>
         <Button
+          width={'100%'}
+          alignSelf='center'
+          justifyContent='center'
+          marginBottom={'60px'}
           hidden={game.isStarted}
           onClick={() => {
             updateGameModel(0, 'DEALER', 'StartGame');
             coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
           }}>
-          Click to Start Game (ADD PLAYER NAMES TO LOBBY)
+          Click to Start Game for all Players in this Lobby
         </Button>
         <ModalBody hidden={!game.isStarted} pb={6}>
           {allHands(game.players, game.hands)}
@@ -443,9 +590,12 @@ export default function BlackjackAreaModal({
         <ModalFooter
           hidden={!game.isStarted || !playerInGame(coveyTownController.ourPlayer.id)}
           justifyContent={'space-between'}>
-          <Text className='pull-left'>
-            Bank: {game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]} points
-          </Text>
+          <Tooltip label='Total amount of points accrued/lost in the game. All players start at 100 points.'>
+            <Text className='pull-left text-style' color={'#d4af37'} fontSize={'40px'}>
+              Bank: {game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]}{' '}
+              points
+            </Text>
+          </Tooltip>
           <HStack hidden={game.results.length == 0}>
             {results()}
             <Button
@@ -459,69 +609,84 @@ export default function BlackjackAreaModal({
                 );
                 coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
               }}>
-              Click this button to start a new hand!
+              Click to start a new hand
             </Button>
           </HStack>
           {wager(game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)])}
           <HStack hidden={game.playerMoveID !== coveyTownController.ourPlayer.id} spacing={8}>
-            <Button
-              onClick={() => {
-                updateGameModel(
-                  blackjackAreaController.gameAction == undefined
-                    ? 0
-                    : blackjackAreaController.gameAction.index + 1,
-                  coveyTownController.ourPlayer.id,
-                  'Hit',
-                );
-                coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
-              }}>
-              Hit
-            </Button>
-            <Button
-              onClick={() => {
-                updateGameModel(
-                  blackjackAreaController.gameAction == undefined
-                    ? 0
-                    : blackjackAreaController.gameAction.index + 1,
-                  coveyTownController.ourPlayer.id,
-                  'Stay',
-                );
-                coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
-              }}>
-              Stay
-            </Button>
-            <Button
-              hidden={cannotSplit}
-              onClick={() => {
-                updateGameModel(
-                  blackjackAreaController.gameAction == undefined
-                    ? 0
-                    : blackjackAreaController.gameAction.index + 1,
-                  coveyTownController.ourPlayer.id,
-                  'Split',
-                );
-                coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
-              }}>
-              Split
-            </Button>
-            <Button
-              hidden={cannotDouble}
-              onClick={() => {
-                updateGameModel(
-                  blackjackAreaController.gameAction == undefined
-                    ? 0
-                    : blackjackAreaController.gameAction.index + 1,
-                  coveyTownController.ourPlayer.id,
-                  'Double',
-                );
-                coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
-              }}>
-              Double
-            </Button>
+            <Tooltip label='Ask Dealer for another card'>
+              <Button
+                onClick={() => {
+                  updateGameModel(
+                    blackjackAreaController.gameAction == undefined
+                      ? 0
+                      : blackjackAreaController.gameAction.index + 1,
+                    coveyTownController.ourPlayer.id,
+                    'Hit',
+                  );
+                  coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+                }}>
+                Hit
+              </Button>
+            </Tooltip>
+            <Tooltip label='End your turn'>
+              <Button
+                onClick={() => {
+                  updateGameModel(
+                    blackjackAreaController.gameAction == undefined
+                      ? 0
+                      : blackjackAreaController.gameAction.index + 1,
+                    coveyTownController.ourPlayer.id,
+                    'Stay',
+                  );
+                  coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+                }}>
+                Stay
+              </Button>
+            </Tooltip>
+            <Tooltip label='Play 2 hands! Wager will be double if you choose this.'>
+              <Button
+                hidden={cannotSplit}
+                onClick={() => {
+                  updateGameModel(
+                    blackjackAreaController.gameAction == undefined
+                      ? 0
+                      : blackjackAreaController.gameAction.index + 1,
+                    coveyTownController.ourPlayer.id,
+                    'Split',
+                  );
+                  setWagerValue(wagerValue * 2);
+                  coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+                }}>
+                Split
+              </Button>
+            </Tooltip>
+            <Tooltip label='Hit once and double you wager'>
+              <Button
+                hidden={cannotDouble}
+                onClick={() => {
+                  updateGameModel(
+                    blackjackAreaController.gameAction == undefined
+                      ? 0
+                      : blackjackAreaController.gameAction.index + 1,
+                    coveyTownController.ourPlayer.id,
+                    'Double',
+                  );
+                  setWagerValue(wagerValue * 2);
+                  coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+                }}>
+                Double
+              </Button>
+            </Tooltip>
           </HStack>
         </ModalFooter>
-        <ModalFooter hidden={!game.isStarted || !!playerInGame(coveyTownController.ourPlayer.id)}>
-          The hand is already in progress. Please wait for the next hand to join the game.
+        <ModalFooter
+          alignSelf={'center'}
+          hidden={!game.isStarted || !!playerInGame(coveyTownController.ourPlayer.id)}
+          color={'#d4af37'}
+          fontSize={'40px'}
+          className='text-style'>
+          The hand is in progress. Please wait for the next hand to join the game.
         </ModalFooter>
       </ModalContent>
     </Modal>

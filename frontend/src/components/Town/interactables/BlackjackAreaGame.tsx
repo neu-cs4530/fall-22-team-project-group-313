@@ -1,5 +1,4 @@
 // import { Container, Modal, ModalBody } from '@chakra-ui/react';
-import React, { useState } from 'react';
 import {
   Modal,
   ModalBody,
@@ -7,9 +6,8 @@ import {
   ModalContent,
   ModalHeader,
   ModalOverlay,
-  Text,
-  useToast,
 } from '@chakra-ui/react';
+import React, { useState } from 'react';
 import { useBlackjackAreaController, useInteractable } from '../../../classes/TownController';
 import useTownController from '../../../hooks/useTownController';
 import BlackjackAreaInteractable from './BlackjackArea';

@@ -83,7 +83,6 @@ export default class BlackjackArea extends Interactable {
     output += '\nHistorical Blackjack Leaders:\n';
 
     const historicalLeaders = this.townController.blackjackHistoricalLeaders;
-    console.log('LEADERS', historicalLeaders);
 
     // Sort leaders dictionary
     const historicalLeadersSorted = new Map(

@@ -42,7 +42,6 @@ function App() {
     page = <PreJoinScreens />;
   }
   const url = process.env.REACT_APP_TOWNS_SERVICE_URL;
-  console.log(url);
   assert(url);
   const townsService = new TownsServiceClient({ BASE: url }).towns;
   return (

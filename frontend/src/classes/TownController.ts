@@ -472,10 +472,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
           updatedBlackjackArea.occupants = this._playersByIDs(interactable.occupantsByID);
           updatedBlackjackArea.gameOccupants = this._playersByIDs(interactable.gameOccupantsByID);
           const emptyAfterChange = updatedBlackjackArea.isEmpty();
-          console.log('TOWNCONTROLLER LEADERS BEFORE: ', this.blackjackHistoricalLeaders);
-          console.log('TOWNCONTROLLER PLAYERS: ', this._players);
           this.updateHistoricalLeaders();
-          console.log('TOWNCONTROLLER LEADERS AFTER: ', this._blackjackHistoricalLeaders);
           if (emptyNow !== emptyAfterChange) {
             this.emit('blackjackAreasChanged', this._blackjackAreasInternal);
           }
@@ -591,7 +588,6 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
             availableSpots--;
           }
         } else {
-          console.log('ELSE:', playerName);
           if (this.blackjackHistoricalLeaders.has(playerName)) {
             if ((this.blackjackHistoricalLeaders.get(playerName) as number) < points) {
               this.blackjackHistoricalLeaders.set(playerName, points);
@@ -648,7 +644,6 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
         this._conversationAreas = [];
         this._viewingAreas = [];
         this._blackjackAreas = [];
-        console.log(initialData.interactables);
         initialData.interactables.forEach(eachInteractable => {
           if (isConversationArea(eachInteractable)) {
             this._conversationAreasInternal.push(

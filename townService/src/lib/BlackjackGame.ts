@@ -154,8 +154,6 @@ export default class BlackjackGame {
    * @param playerID Player ID to be joining
    */
   public addPlayer(playerID: string) {
-    console.log('WHY: ', this._players);
-    console.log('HUH: ', this._newPlayers);
     if (this._players.includes(playerID) || this._newPlayers.includes(playerID)) {
       throw new Error('Player has already been added to this game!');
     }

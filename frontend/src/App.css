@@ -41,6 +41,15 @@
   flex-direction: row;
 }
 
+.button-style button {
+  background-color: transparent !important;
+  border: 1px solid #d4af37;
+  width: fit-content;
+  color: #d4af37;
+  font-family: 'Crossaint One', cursive;
+  font-size: 25px;
+}
+
 #social-container li {
   list-style-type: none;
 }
@@ -99,7 +108,7 @@
 }
 
 .card-suit {
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .card-tl {
@@ -115,4 +124,8 @@
   flex-flow: column nowrap;
   justify-content: flex-start;
   transform: rotate(-180deg);
+}
+
+.text-style {
+  font-family: 'Crossaint One', cursive;
 }

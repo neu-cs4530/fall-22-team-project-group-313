@@ -439,7 +439,7 @@ export default function BlackjackAreaModal({
   function wager(points: number) {
     if (
       game.isStarted &&
-      !(game.results.length !== 0 && playerInGame(coveyTownController.ourPlayer.id))
+      !(game.results[0]?.length !== 0 && playerInGame(coveyTownController.ourPlayer.id))
     ) {
       if (points <= 25) return outputWager(1, points);
       else return outputWager(Math.trunc(points * 0.05), Math.trunc(points * 0.25));
@@ -539,7 +539,7 @@ The dealer also draws two cards. The aim of the game is to beat his hand (have a
             </Text>
           </Tooltip>
         </ModalHeader>
-        <ModalCloseButton hidden={game.isStarted && game.results.length === 0} />
+        <ModalCloseButton hidden={game.isStarted && game.results[0]?.length === 0} />
         <ModalBody hidden={game.isStarted} pb={6}>
           <Flex marginTop={'60px'}>
             <Box flex='1'>
@@ -599,7 +599,7 @@ The dealer also draws two cards. The aim of the game is to beat his hand (have a
               points
             </Text>
           </Tooltip>
-          <HStack hidden={game.results.length == 0}>
+          <HStack hidden={game.results[0]?.length == 0}>
             {results()}
             <Button
               onClick={() => {

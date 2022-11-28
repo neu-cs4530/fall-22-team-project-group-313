@@ -1,6 +1,6 @@
 import { mock, mockClear } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
-import { BlackjackGame as BlackjackGameModel, PlayerLocation } from '../types/CoveyTownSocket';
+import { BlackjackGame as BlackjackGameModel } from '../types/CoveyTownSocket';
 import BlackjackAreaController, { BlackjackAreaEvents } from './BlackjackAreaController';
 
 describe('[T2] BlackjackAreaController', () => {
@@ -9,12 +9,12 @@ describe('[T2] BlackjackAreaController', () => {
   let testModel: BlackjackGameModel;
   const mockListeners = mock<BlackjackAreaEvents>();
   beforeEach(() => {
-    const playerLocation: PlayerLocation = {
-      moving: false,
-      x: 0,
-      y: 0,
-      rotation: 'front',
-    };
+    // const playerLocation: PlayerLocation = {
+    //   moving: false,
+    //   x: 0,
+    //   y: 0,
+    //   rotation: 'front',
+    // };
     // const testGameAction: GameAction = { GameAction: 'test', playerID: 'testID' };
     // testArea = new BlackjackAreaController(nanoid(), testGameAction);
     // testArea.occupants = [

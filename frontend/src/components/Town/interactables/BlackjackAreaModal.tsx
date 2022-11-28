@@ -95,9 +95,12 @@ export default function BlackjackAreaModal({
   const [cannotSplit, setCannotSplit] = useState(true);
   const [cannotDouble, setCannotDouble] = useState(true);
 
-  function playerInGame(playerId: string) {
-    return game.players.find(id => id === playerId);
-  }
+  const playerInGame = useCallback(
+    (playerId: string) => {
+      return game.players.find(id => id === playerId);
+    },
+    [game.players],
+  );
 
   useEffect(() => {
     if (

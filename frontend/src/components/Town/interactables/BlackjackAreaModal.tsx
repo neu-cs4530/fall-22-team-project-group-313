@@ -18,6 +18,7 @@ import {
   SliderThumb,
   SliderTrack,
   Text,
+  Tooltip,
   VStack,
 } from '@chakra-ui/react';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -287,10 +288,14 @@ export default function BlackjackAreaModal({
               return printCard(card.rank, card.suit);
             })}
           </HStack>
-          <Text> {handValue(cards)} </Text>
-          <Text hidden={!yourTurn} color={'#d10f22'} fontSize={'75px'}>
-            ←
-          </Text>
+          <Tooltip label='Total Hand Value'>
+            <Text> {handValue(cards)} </Text>
+          </Tooltip>
+          <Tooltip label='Waiting for this player'>
+            <Text hidden={!yourTurn} color={'#d10f22'} fontSize={'75px'}>
+              ←
+            </Text>
+          </Tooltip>
         </HStack>
       </GridItem>
     );
@@ -345,7 +350,9 @@ export default function BlackjackAreaModal({
               return printCard('', '');
             })}
           </HStack>
-          <Text> {handValue(faceUpCards)} </Text>
+          <Tooltip label='Total Hand Value'>
+            <Text> {handValue(faceUpCards)} </Text>
+          </Tooltip>
         </HStack>
       </GridItem>
     );
@@ -383,13 +390,15 @@ export default function BlackjackAreaModal({
         <Text hidden={!wagerHide} className={'text-style'} color={'#d4af37'} fontSize={'40px'}>
           Current Wager: {wagerValue} points
         </Text>
-        <Text
-          hidden={wagerHide}
-          className='pull-left text-style'
-          color={'#d4af37'}
-          fontSize={'40px'}>
-          Wager:
-        </Text>
+        <Tooltip label='Use the slider to select the amount you would like to wager and then press Submit. Note: Wagers are kept within the range of 5% - 25% of the bank. If your bank equals 25 points or less, then you can wager any amount between 0 and the max.'>
+          <Text
+            hidden={wagerHide}
+            className='pull-left text-style'
+            color={'#d4af37'}
+            fontSize={'40px'}>
+            Wager:
+          </Text>
+        </Tooltip>
         <Slider
           width='400px'
           hidden={wagerHide}
@@ -517,9 +526,15 @@ export default function BlackjackAreaModal({
       <ModalOverlay />
       <ModalContent backgroundColor={'#1d7349'} className={'button-style'}>
         <ModalHeader textAlign={'center'}>
-          <Text className={'text-style'} color={'#d4af37'} fontSize={'85px'}>
-            Blackjack Area
-          </Text>
+          <Tooltip
+            label='Basic Rules: Your goal in blackjack is to beat the dealer’s hand without going over 21. 
+You’ll receive 2 cards at the beginning of each round, and you’ll add up the values of these cards. 
+Cards 2-10 have face value; King, Queen, Jack are worth 10; and Aces are either a 1 or an 11 — it’s up to you to decide.
+The dealer also draws two cards. The aim of the game is to beat his hand (have a higher hand) without going over 21.'>
+            <Text className={'text-style'} color={'#d4af37'} fontSize={'85px'}>
+              Blackjack Area
+            </Text>
+          </Tooltip>
         </ModalHeader>
         <ModalCloseButton hidden={game.isStarted && game.results.length === 0} />
         <ModalBody hidden={game.isStarted} pb={6}>
@@ -575,9 +590,12 @@ export default function BlackjackAreaModal({
         <ModalFooter
           hidden={!game.isStarted || !playerInGame(coveyTownController.ourPlayer.id)}
           justifyContent={'space-between'}>
-          <Text className='pull-left text-style' color={'#d4af37'} fontSize={'40px'}>
-            Bank: {game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]} points
-          </Text>
+          <Tooltip label='Total amount of points accrued/lost in the game. All players start at 100 points.'>
+            <Text className='pull-left text-style' color={'#d4af37'} fontSize={'40px'}>
+              Bank: {game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]}{' '}
+              points
+            </Text>
+          </Tooltip>
           <HStack hidden={game.results.length == 0}>
             {results()}
             <Button
@@ -596,62 +614,70 @@ export default function BlackjackAreaModal({
           </HStack>
           {wager(game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)])}
           <HStack hidden={game.playerMoveID !== coveyTownController.ourPlayer.id} spacing={8}>
-            <Button
-              onClick={() => {
-                updateGameModel(
-                  blackjackAreaController.gameAction == undefined
-                    ? 0
-                    : blackjackAreaController.gameAction.index + 1,
-                  coveyTownController.ourPlayer.id,
-                  'Hit',
-                );
-                coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
-              }}>
-              Hit
-            </Button>
-            <Button
-              onClick={() => {
-                updateGameModel(
-                  blackjackAreaController.gameAction == undefined
-                    ? 0
-                    : blackjackAreaController.gameAction.index + 1,
-                  coveyTownController.ourPlayer.id,
-                  'Stay',
-                );
-                coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
-              }}>
-              Stay
-            </Button>
-            <Button
-              hidden={cannotSplit}
-              onClick={() => {
-                updateGameModel(
-                  blackjackAreaController.gameAction == undefined
-                    ? 0
-                    : blackjackAreaController.gameAction.index + 1,
-                  coveyTownController.ourPlayer.id,
-                  'Split',
-                );
-                setWagerValue(wagerValue * 2);
-                coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
-              }}>
-              Split
-            </Button>
-            <Button
-              hidden={cannotDouble}
-              onClick={() => {
-                updateGameModel(
-                  blackjackAreaController.gameAction == undefined
-                    ? 0
-                    : blackjackAreaController.gameAction.index + 1,
-                  coveyTownController.ourPlayer.id,
-                  'Double',
-                );
-                setWagerValue(wagerValue * 2);
-                coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
-              }}>
-              Double
-            </Button>
+            <Tooltip label='Ask Dealer for another card'>
+              <Button
+                onClick={() => {
+                  updateGameModel(
+                    blackjackAreaController.gameAction == undefined
+                      ? 0
+                      : blackjackAreaController.gameAction.index + 1,
+                    coveyTownController.ourPlayer.id,
+                    'Hit',
+                  );
+                  coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+                }}>
+                Hit
+              </Button>
+            </Tooltip>
+            <Tooltip label='End your turn'>
+              <Button
+                onClick={() => {
+                  updateGameModel(
+                    blackjackAreaController.gameAction == undefined
+                      ? 0
+                      : blackjackAreaController.gameAction.index + 1,
+                    coveyTownController.ourPlayer.id,
+                    'Stay',
+                  );
+                  coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+                }}>
+                Stay
+              </Button>
+            </Tooltip>
+            <Tooltip label='Play 2 hands! Wager will be double if you choose this.'>
+              <Button
+                hidden={cannotSplit}
+                onClick={() => {
+                  updateGameModel(
+                    blackjackAreaController.gameAction == undefined
+                      ? 0
+                      : blackjackAreaController.gameAction.index + 1,
+                    coveyTownController.ourPlayer.id,
+                    'Split',
+                  );
+                  setWagerValue(wagerValue * 2);
+                  coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+                }}>
+                Split
+              </Button>
+            </Tooltip>
+            <Tooltip label='Hit once and double you wager'>
+              <Button
+                hidden={cannotDouble}
+                onClick={() => {
+                  updateGameModel(
+                    blackjackAreaController.gameAction == undefined
+                      ? 0
+                      : blackjackAreaController.gameAction.index + 1,
+                    coveyTownController.ourPlayer.id,
+                    'Double',
+                  );
+                  setWagerValue(wagerValue * 2);
+                  coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+                }}>
+                Double
+              </Button>
+            </Tooltip>
           </HStack>
         </ModalFooter>
         <ModalFooter

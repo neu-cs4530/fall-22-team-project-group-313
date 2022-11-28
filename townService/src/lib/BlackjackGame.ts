@@ -1,4 +1,3 @@
-import { BlackjackGame as BlackjackGameModel } from '../types/CoveyTownSocket';
 import Card from './Card';
 
 /**
@@ -25,10 +24,9 @@ export enum DealerMove {
 export default class BlackjackGame {
   readonly PLAYERLIMIT = 5;
 
-  private _deck = new Array<Card>();
+  readonly SHUFFLELIMIT = 1 / 4;
 
-  // Index of player to move
-  public playerMoveIndex: number;
+  private _deck = new Array<Card>();
 
   // Dealer's hand
   private _dealerHand = new Array<Card>();
@@ -42,9 +40,6 @@ export default class BlackjackGame {
   // Bets players have on each hand
   private _playerBets: Map<string, number[]>;
 
-  // Player balances
-  public playerPoints: Map<string, number>;
-
   // Index of players' hands that need to be bet on, if any
   private _handsAwaitingBet: Map<string, number | undefined>;
 
@@ -56,21 +51,27 @@ export default class BlackjackGame {
   // Queue to join next round
   private _newPlayers: string[];
 
-  public gameInProgress = false;
-
   private _shouldShuffle: boolean;
 
-  public _results: string[][];
+  // Index of player to move
+  private _playerMoveIndex: number;
+
+  // Player balances
+  private _playerPoints: Map<string, number>;
+
+  private _gameInProgress = false;
+
+  private _results: string[][];
 
   constructor(numDecks?: number, shuffle?: boolean) {
     this._players = [];
-    this.playerMoveIndex = -1;
+    this._playerMoveIndex = -1;
     this._numDecks = numDecks ?? 6;
     this._hands = new Map<string, Card[][]>();
     this._currentHandIndex = new Map<string, number>();
     this._playerBets = new Map<string, number[]>();
     this._handsAwaitingBet = new Map<string, number | undefined>();
-    this.playerPoints = new Map<string, number>();
+    this._playerPoints = new Map<string, number>();
     this._newPlayers = [];
     this._shouldShuffle = shuffle ?? true;
     this._results = [];
@@ -134,7 +135,7 @@ export default class BlackjackGame {
     this._initializeDeck(shuffle ?? true);
     this._players.push(...this._newPlayers);
     this._newPlayers.forEach(id => {
-      this.playerPoints.set(id, 100);
+      this._playerPoints.set(id, 100);
     });
     this._newPlayers = [];
     this._players.forEach(id => {
@@ -143,8 +144,11 @@ export default class BlackjackGame {
       this._playerBets.set(id, []); // To be updated later
       this._handsAwaitingBet.set(id, 0);
     });
-    this.gameInProgress = true;
-    this.playerMoveIndex = -1;
+    if (this._deck.length < this._numDecks * 52 * this.SHUFFLELIMIT) {
+      this._initializeDeck(this._shouldShuffle);
+    }
+    this._gameInProgress = true;
+    this._playerMoveIndex = -1;
     this._results = [];
     this._dealerHand = [];
   }
@@ -161,27 +165,6 @@ export default class BlackjackGame {
       throw new Error('Game has maximum number of players');
     }
     this._newPlayers.push(playerID);
-    // if (
-    //   !(this.players.includes(playerID) || this._newPlayers.includes(playerID)) &&
-    //   this.players.length + this._newPlayers.length >= this.PLAYERLIMIT
-    // ) {
-    //   this._newPlayers.push(playerID);
-    // }
-  }
-
-  /**
-   * Removes this player from the queue or the game if present
-   * @param playerID player leaving
-   */
-  public removePlayer(playerID: string) {
-    if (!this._players.includes(playerID) || !this._newPlayers.includes(playerID)) {
-      throw new Error('Player does not exist in this game!');
-    }
-    if (this._players.includes(playerID)) {
-      this._players.splice(this._players.indexOf(playerID), 1);
-    } else {
-      this._newPlayers.splice(this._newPlayers.indexOf(playerID), 1);
-    }
   }
 
   /**
@@ -193,7 +176,7 @@ export default class BlackjackGame {
     const isWager = (move as string).substring(0, 6) === 'Wager:';
     if (
       !isWager &&
-      playerID !== this._players[this.playerMoveIndex] &&
+      playerID !== this._players[this._playerMoveIndex] &&
       move !== 'Leave' &&
       move !== 'Join'
     ) {
@@ -206,7 +189,7 @@ export default class BlackjackGame {
       case BlackjackMove.Hit: {
         const nextCard = this._deck.pop() as Card;
         playerHands[currentHandIndex].push(nextCard);
-        const currentVal = this.handValues(playerID)[currentHandIndex];
+        const currentVal = this._handValues(playerID)[currentHandIndex];
         if (currentVal >= 21) {
           currentHandIndex += 1;
           this._currentHandIndex.set(playerID, currentHandIndex);
@@ -216,7 +199,7 @@ export default class BlackjackGame {
       }
       case BlackjackMove.Double: {
         const currentHand = playerHands[currentHandIndex];
-        const currentHandVal = this.handValues(playerID)[currentHandIndex];
+        const currentHandVal = this._handValues(playerID)[currentHandIndex];
         if (currentHandVal > 11 || currentHandVal < 9) {
           throw new Error('Hand value must be between 9 and 11!');
         }
@@ -235,7 +218,7 @@ export default class BlackjackGame {
         if (initHand[0].value !== initHand[1].value) {
           throw new Error("Player's card values do not match!");
         }
-        const secondHand = initHand.slice(0, 1);
+        const secondHand = [initHand[1]];
         playerHands[currentHandIndex].splice(1, 1);
         playerHands.push(secondHand);
         const bets = this._playerBets.get(playerID) as number[];
@@ -255,16 +238,16 @@ export default class BlackjackGame {
           (this._players.length === 0 && this._newPlayers.length === 1)
         ) {
           this._players = [];
-          this.playerMoveIndex = -1;
+          this._playerMoveIndex = -1;
           this._hands = new Map<string, Card[][]>();
           this._currentHandIndex = new Map<string, number>();
           this._playerBets = new Map<string, number[]>();
           this._handsAwaitingBet = new Map<string, number | undefined>();
-          this.playerPoints = new Map<string, number>();
+          this._playerPoints = new Map<string, number>();
           this._newPlayers = [];
           this._shouldShuffle = true;
           this._results = [];
-          this.gameInProgress = false;
+          this._gameInProgress = false;
           break;
         } else {
           // TODO
@@ -287,12 +270,12 @@ export default class BlackjackGame {
       default:
         if (isWager) {
           const wagerValue = +(move as string).slice(6);
-          this.setBet(playerID, wagerValue);
+          this._setBet(playerID, wagerValue);
           const nonBetters = this._players.find(id => this._handsAwaitingBet.get(id) !== undefined);
           if (!nonBetters) {
             this._deal();
-            this.playerMoveIndex = 0;
-            if (this.handValues(this._players[0])[0] === 21) {
+            this._playerMoveIndex = 0;
+            if (this._handValues(this._players[0])[0] === 21) {
               this.playerMove(this._players[0], BlackjackMove.Stay);
             }
           }
@@ -302,15 +285,15 @@ export default class BlackjackGame {
     }
 
     if (move !== 'Leave') {
-      this.playerMoveIndex += turnOver ? 1 : 0;
-      if (turnOver && this.playerMoveIndex < this._players.length) {
-        if (this.handValues(this._players[this.playerMoveIndex])[0] === 21) {
-          this.playerMove(this._players[this.playerMoveIndex], BlackjackMove.Stay);
+      this._playerMoveIndex += turnOver ? 1 : 0;
+      if (turnOver && this._playerMoveIndex < this._players.length) {
+        if (this._handValues(this._players[this._playerMoveIndex])[0] === 21) {
+          this.playerMove(this._players[this._playerMoveIndex], BlackjackMove.Stay);
         }
       }
 
-      if (this.playerMoveIndex >= this._players.length) {
-        this.playDealerHand();
+      if (this._playerMoveIndex >= this._players.length) {
+        this._playDealerHand();
       }
     }
   }
@@ -333,7 +316,7 @@ export default class BlackjackGame {
         break;
       }
       case DealerMove.PlayHand: {
-        this.playDealerHand();
+        this._playDealerHand();
         break;
       }
       default:
@@ -341,48 +324,36 @@ export default class BlackjackGame {
     }
   }
 
-  /**
-   * Gets the hand(s) that a player has in this game.
-   * @param playerID The player ID in the game
-   * @returns the player's hands
-   */
-  public getPlayerHands(playerID: string): Card[][] {
+  private _getPlayerHands(playerID: string): Card[][] {
     if (!this._players.includes(playerID)) {
       throw new Error(`${playerID} does not exist in this game`);
     }
     return this._hands.get(playerID) as Card[][];
   }
 
-  /**
-   * Plays the dealer's hand out according to the rules.
-   */
-  public playDealerHand(): void {
-    if (this.playerMoveIndex < this._players.length) {
+  private _playDealerHand(): void {
+    if (this._playerMoveIndex < this._players.length) {
       throw new Error('Not the dealers turn!');
     }
     this.dealerHand[1].isFaceUp = true;
-    let val = +this.handValues('dealer').slice(-2);
+    let val = +this._handValues('dealer').slice(-2);
     while (val < 17) {
       const nextCard = this._deck.pop() as Card;
       this._dealerHand.push(nextCard);
       // val += nextCard.value === 11 && val < 11 ? 11 : nextCard.value;
-      val = +this.handValues('dealer');
+      val = +this._handValues('dealer');
     }
     this._handleBets();
     // this.gameInProgress = false;
   }
 
-  /**
-   * Computes the highest value the hand can have under 21.
-   * @param playerID The ID of the player (or 'dealer')
-   */
-  public handValues(playerID: string): number[] {
+  private _handValues(playerID: string): number[] {
     let hands: Card[][];
     const totals: number[] = [];
     if (playerID === 'dealer') {
       hands = [this._dealerHand];
     } else {
-      hands = this.getPlayerHands(playerID);
+      hands = this._getPlayerHands(playerID);
     }
     hands.forEach(hand => {
       let total = 0;
@@ -402,12 +373,7 @@ export default class BlackjackGame {
     return totals;
   }
 
-  /**
-   * Sets the bet of the player hand, if applicable
-   * @param playerID the player awaiting a bet
-   * @param bet how much money to bet
-   */
-  public setBet(playerID: string, bet: number): void {
+  private _setBet(playerID: string, bet: number): void {
     const awaitingBet = this._handsAwaitingBet.get(playerID);
     if (this._handsAwaitingBet.get(playerID) === undefined) {
       throw new Error('Player is not awaiting a bet!');
@@ -428,14 +394,22 @@ export default class BlackjackGame {
   // Once the game is over, distributes the points accordingly
   // Currently doesn't do anything with the dealer's points
   private _handleBets(): void {
-    const dealerHandVal = this.handValues('dealer')[0];
+    const dealerHandVal = this._handValues('dealer')[0];
     this._players.forEach(id => {
-      const handVals = this.handValues(id);
+      const handVals = this._handValues(id);
       const bets = this._playerBets.get(id) as number[];
-      let points = this.playerPoints.get(id) as number;
+      let points = this._playerPoints.get(id) as number;
       const results: string[] = [];
       handVals.forEach((val, index) => {
-        if (val > 21 || (val < dealerHandVal && dealerHandVal <= 21)) {
+        if (
+          val === 21 &&
+          (this.hands.get(id) as Card[][])[index].length === 2 &&
+          dealerHandVal !== 21
+        ) {
+          // TODO: Blackjack
+          results.push('won');
+          points += bets[index] * 1.5;
+        } else if (val > 21 || (val < dealerHandVal && dealerHandVal <= 21)) {
           // TODO: lose
           points -= bets[index];
           results.push('lost');
@@ -448,19 +422,19 @@ export default class BlackjackGame {
         }
         this._results.push(results);
       });
-      this.playerPoints.set(id, points);
+      this._playerPoints.set(id, points);
     });
   }
 
   public toModel() {
     const game = {
       hands: Array.from(this.hands.values()),
-      playerPoints: Array.from(this.playerPoints.values()),
+      playerPoints: Array.from(this._playerPoints.values()),
       playerBets: Array.from(this.playerBets.values()),
-      playerMoveID: this.playerMoveIndex === -1 ? '' : this._players[this.playerMoveIndex],
+      playerMoveID: this._playerMoveIndex === -1 ? '' : this._players[this._playerMoveIndex],
       players: this._players,
       queue: this._newPlayers,
-      isStarted: this.gameInProgress,
+      isStarted: this._gameInProgress,
       dealerHand: this._dealerHand,
       results: this._results,
     };

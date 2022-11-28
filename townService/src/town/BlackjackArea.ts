@@ -6,7 +6,6 @@ import {
   BoundingBox,
   BlackjackArea as BlackjackModel,
   TownEmitter,
-  BlackjackGame as BlackjackGameModel,
 } from '../types/CoveyTownSocket';
 import InteractableArea from './InteractableArea';
 

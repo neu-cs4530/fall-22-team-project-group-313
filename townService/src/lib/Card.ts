@@ -28,39 +28,39 @@ export default class Card {
 
   public isFaceUp: boolean;
 
-  private _rankToValue = new Map<string, number>();
+  static RankToValue = new Map<string, number>([
+    ['A', 11],
+    ['2', 2],
+    ['3', 3],
+    ['4', 4],
+    ['5', 5],
+    ['6', 6],
+    ['7', 7],
+    ['8', 8],
+    ['9', 9],
+    ['10', 10],
+    ['J', 10],
+    ['Q', 10],
+    ['K', 10],
+  ]);
 
   public toString(): string {
     return this.suit + this.rank;
   }
 
-  private constructor(suit: Suit, rank: string) {
+  constructor(suit: Suit, rank: string) {
     this.suit = suit;
     this.rank = rank;
     this.isFaceUp = true;
-    this._rankToValue.set('A', 11);
-    this._rankToValue.set('2', 2);
-    this._rankToValue.set('3', 3);
-    this._rankToValue.set('4', 4);
-    this._rankToValue.set('5', 5);
-    this._rankToValue.set('6', 6);
-    this._rankToValue.set('7', 7);
-    this._rankToValue.set('8', 8);
-    this._rankToValue.set('9', 9);
-    this._rankToValue.set('10', 10);
-    this._rankToValue.set('J', 10);
-    this._rankToValue.set('Q', 10);
-    this._rankToValue.set('K', 10);
   }
 
   public get value() {
-    return this._rankToValue.get(this.rank) as number;
+    return Card.RankToValue.get(this.rank) as number;
   }
 
   public static getDeck(): Card[] {
     const deck = new Array<Card>();
-    const card = new Card(Suit.C, 'A');
-    const ranks = Array.from(card._rankToValue.keys());
+    const ranks = Array.from(Card.RankToValue.keys());
     ranks.forEach(rank => {
       Object.keys(Suit).forEach(suit => {
         deck.push(new Card(suit as Suit, rank));

@@ -1,4 +1,3 @@
-import { ThisMonthInstance } from 'twilio/lib/rest/api/v2010/account/usage/record/thisMonth';
 import Card from './Card';
 
 /**

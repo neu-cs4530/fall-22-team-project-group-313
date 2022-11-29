@@ -22,10 +22,13 @@ export enum DealerMove {
  * Class representing the current state of a blackjack game.
  */
 export default class BlackjackGame {
+  // Limit of players
   readonly PLAYERLIMIT = 5;
 
+  // Reshuffle when deck goes below this fraction of original capacity
   readonly SHUFFLELIMIT = 1 / 4;
 
+  // Deck
   private _deck = new Array<Card>();
 
   // Dealer's hand
@@ -51,6 +54,7 @@ export default class BlackjackGame {
   // Queue to join next round
   private _newPlayers: string[];
 
+  // if the game should shuffle the deck upon resetting
   private _shouldShuffle: boolean;
 
   // Index of player to move
@@ -59,8 +63,10 @@ export default class BlackjackGame {
   // Player balances
   private _playerPoints: Map<string, number>;
 
+  // is the game in progress?
   private _gameInProgress = false;
 
+  // Results of the last round
   private _results: Map<string, string[]>;
 
   constructor(numDecks?: number, shuffle?: boolean) {
@@ -131,7 +137,7 @@ export default class BlackjackGame {
    * Resets the game cards and deals hands again
    * @param shuffle if the game should be shuffled or not
    */
-  public resetGame(shuffle?: boolean) {
+  private _resetGame(shuffle?: boolean) {
     this._initializeDeck(shuffle ?? true);
     this._players.push(...this._newPlayers);
     this._newPlayers.forEach(id => {
@@ -144,6 +150,9 @@ export default class BlackjackGame {
       this._playerBets.set(id, []); // To be updated later
       this._handsAwaitingBet.set(id, 0);
       this._results.set(id, []);
+      if ((this._playerPoints.get(id) as number) <= 0) {
+        this._playerPoints.set(id, 100);
+      }
     });
 
     if (this._deck.length < this._numDecks * 52 * this.SHUFFLELIMIT) {
@@ -331,7 +340,7 @@ export default class BlackjackGame {
   public dealerAction(move: DealerMove) {
     switch (move) {
       case DealerMove.StartGame: {
-        this.resetGame(this._shouldShuffle);
+        this._resetGame(this._shouldShuffle);
         break;
       }
       case DealerMove.EndGame: {
@@ -342,7 +351,7 @@ export default class BlackjackGame {
           this._handsAwaitingBet.delete(playerID);
           this._playerBets.delete(playerID);
         });
-        this.resetGame(this._shouldShuffle);
+        this._resetGame(this._shouldShuffle);
         break;
       }
       case DealerMove.PlayHand: {
@@ -408,7 +417,7 @@ export default class BlackjackGame {
     if (this._handsAwaitingBet.get(playerID) === undefined) {
       throw new Error('Player is not awaiting a bet!');
     }
-    if (bet <= 0) {
+    if (bet < 0) {
       throw new Error('Bet must be positive!');
     }
     // const maxBet = (this.playerPoints.get(playerID) as number) / 2;

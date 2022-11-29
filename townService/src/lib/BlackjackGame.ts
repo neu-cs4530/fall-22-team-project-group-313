@@ -22,8 +22,10 @@ export enum DealerMove {
  * Class representing the current state of a blackjack game.
  */
 export default class BlackjackGame {
+  // Max players allowed in a game
   readonly PLAYERLIMIT = 5;
 
+  // When the deck reaches below this fraction of its original size, reshuffle
   readonly SHUFFLELIMIT = 1 / 4;
 
   private _deck = new Array<Card>();
@@ -46,11 +48,13 @@ export default class BlackjackGame {
   // Number of decks to be used in the game
   private readonly _numDecks: number;
 
+  // Players in the game
   private _players: string[];
 
   // Queue to join next round
   private _newPlayers: string[];
 
+  // Should reshuffle on deck reset
   private _shouldShuffle: boolean;
 
   // Index of player to move
@@ -59,8 +63,10 @@ export default class BlackjackGame {
   // Player balances
   private _playerPoints: Map<string, number>;
 
+  // If the game is currently being played
   private _gameInProgress = false;
 
+  // The results of this game
   private _results: string[][];
 
   constructor(numDecks?: number, shuffle?: boolean) {
@@ -143,6 +149,9 @@ export default class BlackjackGame {
       this._currentHandIndex.set(id, 0);
       this._playerBets.set(id, []); // To be updated later
       this._handsAwaitingBet.set(id, 0);
+      if ((this._playerPoints.get(id) as number) >= 0) {
+        this._playerPoints.set(id, 100);
+      }
     });
     if (this._deck.length < this._numDecks * 52 * this.SHUFFLELIMIT) {
       this._initializeDeck(this._shouldShuffle);
@@ -379,7 +388,7 @@ export default class BlackjackGame {
     if (this._handsAwaitingBet.get(playerID) === undefined) {
       throw new Error('Player is not awaiting a bet!');
     }
-    if (bet <= 0) {
+    if (bet < 0) {
       throw new Error('Bet must be positive!');
     }
     // const maxBet = (this.playerPoints.get(playerID) as number) / 2;

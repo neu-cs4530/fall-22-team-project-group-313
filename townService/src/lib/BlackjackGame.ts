@@ -151,7 +151,6 @@ export default class BlackjackGame {
     }
     this._gameInProgress = true;
     this._playerMoveIndex = -1;
-    this._results = [];
 
     this._dealerHand = [];
   }
@@ -251,23 +250,33 @@ export default class BlackjackGame {
           this._newPlayers = [];
           this._shouldShuffle = true;
           this._results = new Map<string, string[]>();
-          this.gameInProgress = false;
-          break;
+          this._gameInProgress = false;
+        } else if (this._newPlayers.find(id => id === playerID)) {
+          this._newPlayers = this._newPlayers.filter(id => id !== playerID);
+        } else if (this._players.length === 1 && this._newPlayers.length > 0) {
+          this._removePlayer(playerID);
+          this.dealerAction(DealerMove.EndGame);
+        } else if (this._players[this._playerMoveIndex] === playerID) {
+          this.playerMove(playerID, BlackjackMove.Stay);
+          this._removePlayer(playerID);
+          this._playerMoveIndex -= 1;
+        } else if (this._playerMoveIndex > this._players.indexOf(playerID)) {
+          this._removePlayer(playerID);
+          this._playerMoveIndex -= 1;
+        } else if (
+          Array.from(this._handsAwaitingBet.values()).filter(bet => bet === 0).length === 1 &&
+          this._handsAwaitingBet.get(playerID) === 0
+        ) {
+          this._removePlayer(playerID);
+          this._deal();
+          this._playerMoveIndex = 0;
+          if (this._handValues(this._players[0])[0] === 21) {
+            this.playerMove(this._players[0], BlackjackMove.Stay);
+          }
         } else {
-          // TODO
-          const newPlayers = this._players.filter(id => id !== playerID);
-          const newQueue = this._newPlayers.filter(id => id !== playerID);
-          this._players = newPlayers;
-          this._newPlayers = newQueue;
-          this._hands.delete(playerID);
-          this._currentHandIndex.delete(playerID);
-          this._handsAwaitingBet.delete(playerID);
-          this._playerBets.delete(playerID);
-          this.playerPoints.delete(playerID);
-          this._results.delete(playerID);
-          // Don't say turnOver = true as index should autocompensate
-          break;
+          this._removePlayer(playerID);
         }
+        break;
       }
       case BlackjackMove.Join: {
         break;
@@ -298,12 +307,25 @@ export default class BlackjackGame {
       }
 
       if (
-        this.playerMoveIndex >= this._players.length &&
+        this._playerMoveIndex >= this._players.length &&
         this._results.get(this._players[0])?.length === 0
       ) {
-        this.playDealerHand();
+        this._playDealerHand();
       }
     }
+  }
+
+  private _removePlayer(playerID: string): void {
+    const newPlayers = this._players.filter(id => id !== playerID);
+    const newQueue = this._newPlayers.filter(id => id !== playerID);
+    this._players = newPlayers;
+    this._newPlayers = newQueue;
+    this._hands.delete(playerID);
+    this._currentHandIndex.delete(playerID);
+    this._handsAwaitingBet.delete(playerID);
+    this._playerBets.delete(playerID);
+    this._playerPoints.delete(playerID);
+    this._results.delete(playerID);
   }
 
   public dealerAction(move: DealerMove) {
@@ -432,7 +454,7 @@ export default class BlackjackGame {
         }
       });
       this._results.set(id, results);
-      this.playerPoints.set(id, points);
+      this._playerPoints.set(id, points);
     });
   }
 

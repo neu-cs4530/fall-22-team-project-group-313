@@ -218,6 +218,7 @@ export default class BlackjackGame {
         if (initHand[0].value !== initHand[1].value) {
           throw new Error("Player's card values do not match!");
         }
+        // TODO: Test splitting not duplicating card
         const secondHand = [initHand[1]];
         playerHands[currentHandIndex].splice(1, 1);
         playerHands.push(secondHand);
@@ -394,6 +395,7 @@ export default class BlackjackGame {
   // Once the game is over, distributes the points accordingly
   // Currently doesn't do anything with the dealer's points
   private _handleBets(): void {
+    // TODO: Test blackjack
     const dealerHandVal = this._handValues('dealer')[0];
     this._players.forEach(id => {
       const handVals = this._handValues(id);
@@ -408,7 +410,8 @@ export default class BlackjackGame {
         ) {
           // TODO: Blackjack
           results.push('won');
-          points += bets[index] * 1.5;
+          bets[index] *= 1.5;
+          points += bets[index];
         } else if (val > 21 || (val < dealerHandVal && dealerHandVal <= 21)) {
           // TODO: lose
           points -= bets[index];

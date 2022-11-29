@@ -5,7 +5,6 @@ import TypedEmitter from 'typed-emitter';
 import {
   BlackjackArea as BlackjackModel,
   BlackjackGame as BlackjackGameModel,
-  Card,
   GameAction,
 } from '../types/CoveyTownSocket';
 import PlayerController from './PlayerController';
@@ -56,25 +55,19 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
     return this._id;
   }
 
+  /**
+   * Returns the ID of the game
+   */
   get game() {
     return this._game;
   }
 
+  /**
+   * Sets the ID of the game and emits a gameChange event to listeners
+   */
   set game(game: BlackjackGameModel) {
     this._game = game;
     this.emit('gameChange', game);
-    // if (
-    //   _.xor(Object.keys(this._game.hands), Object.keys(game.hands)).length > 0 ||
-    //   _.xor(Object.values(this._game.hands), Object.values(game.hands)).length > 0
-    // ) {
-
-    // }
-    // if (
-    //   _.xor(Object.keys(this._game.playerPoints), Object.keys(game.playerPoints)).length > 0 ||
-    //   _.xor(Object.values(this._game.playerPoints), Object.values(game.playerPoints)).length > 0
-    // ) {
-
-    // }
   }
 
   /**
@@ -171,55 +164,10 @@ export default class BlackjackAreaController extends (EventEmitter as new () => 
 }
 
 /**
- * A react hook to retrieve the occupants of a BlackjackAreaController, returning an array of PlayerController.
- *
- * This hook will re-render any components that use it when the set of occupants changes.
+ * Updates the current controller
+ * @param area New BlackjackAreaController
+ * @returns BlackjackAreaController
  */
-export function useBlackjackAreaOccupants(area: BlackjackAreaController): PlayerController[] {
-  const [occupants, setOccupants] = useState(area.occupants);
-  useEffect(() => {
-    area.addListener('occupantsChange', setOccupants);
-    return () => {
-      area.removeListener('occupantsChange', setOccupants);
-    };
-  }, [area]);
-  return occupants;
-}
-
-export function useBlackjackAreaGameOccupants(area: BlackjackAreaController): PlayerController[] {
-  const [gameOccupants, setGameOccupants] = useState(area.gameOccupants);
-  useEffect(() => {
-    const setGameOccs = (players: PlayerController[], hands: Card[][][]) => {
-      if (players.length === hands.length) {
-        setGameOccupants(players);
-      }
-    };
-    area.addListener('gameOccupantsChange', setGameOccupants);
-    setGameOccs(area.gameOccupants, area.game.hands);
-    return () => {
-      area.removeListener('gameOccupantsChange', setGameOccupants);
-    };
-  }, [area]);
-  return gameOccupants;
-}
-
-/**
- * A react hook to retrieve the gameAction of a BlackjackAreaController.
- * If there is currently no gameAction defined, it will return undefined.
- *
- * This hook will re-render any components that use it when the gameAction changes.
- */
-export function useBlackjackAreaGameAction(area: BlackjackAreaController): GameAction | undefined {
-  const [gameAction, setGameAction] = useState(area.gameAction);
-  useEffect(() => {
-    area.addListener('gameActionChange', setGameAction);
-    return () => {
-      area.removeListener('gameActionChange', setGameAction);
-    };
-  }, [area]);
-  return gameAction;
-}
-
 export function useGame(area: BlackjackAreaController): BlackjackGameModel {
   const [game, setGame] = useState(area.game);
   useEffect(() => {

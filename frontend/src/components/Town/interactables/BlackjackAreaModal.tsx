@@ -95,6 +95,9 @@ export default function BlackjackAreaModal({
   const [cannotSplit, setCannotSplit] = useState(true);
   const [cannotDouble, setCannotDouble] = useState(true);
 
+  /**
+   *  Returns the player in the game
+   */
   const playerInGame = useCallback(
     (playerId: string) => {
       return game.players.find(id => id === playerId);
@@ -102,36 +105,24 @@ export default function BlackjackAreaModal({
     [game.players],
   );
 
+  /**
+   *  Updates Wager value and wager componets
+   */
   useEffect(() => {
     if (
       blackjackAreaController.gameAction?.GameAction === 'EndGame' &&
       playerInGame(coveyTownController.ourPlayer.id)
     ) {
       setWagerHide(false);
-      if (game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)] <= 25) {
-        if (
-          wagerValue > game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]
-        ) {
-          setWagerValue(game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]);
+      const currPoints = game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)];
+      if (currPoints <= 25) {
+        if (wagerValue > currPoints) {
+          setWagerValue(currPoints);
         }
-      } else if (
-        wagerValue >
-        Math.trunc(game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)] * 0.25)
-      ) {
-        setWagerValue(
-          Math.trunc(
-            game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)] * 0.25,
-          ),
-        );
-      } else if (
-        wagerValue <
-        Math.trunc(game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)] * 0.05)
-      ) {
-        setWagerValue(
-          Math.trunc(
-            game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)] * 0.25,
-          ),
-        );
+      } else if (wagerValue > Math.trunc(currPoints * 0.25)) {
+        setWagerValue(Math.trunc(currPoints * 0.25));
+      } else if (wagerValue < Math.trunc(currPoints * 0.05)) {
+        setWagerValue(Math.trunc(currPoints * 0.25));
       }
     }
   }, [
@@ -143,14 +134,18 @@ export default function BlackjackAreaModal({
     wagerValue,
   ]);
 
+  /**
+   *  Sets the hidden props for the game action components
+   */
   useEffect(() => {
     setCannotDouble(true);
     setCannotSplit(true);
     if (game.isStarted && playerInGame(coveyTownController.ourPlayer.id)) {
+      const currPlayerHands = game.hands[game.players.indexOf(coveyTownController.ourPlayer.id)];
       // Your player must have only one hand
-      if (game.hands[game.players.indexOf(coveyTownController.ourPlayer.id)].length == 1) {
+      if (currPlayerHands.length == 1) {
         // You must have two cards exactly
-        if (game.hands[game.players.indexOf(coveyTownController.ourPlayer.id)][0].length == 2) {
+        if (currPlayerHands[0].length == 2) {
           if (
             // Bank value must allow it
             game.playerBets[game.players.indexOf(coveyTownController.ourPlayer.id)][
@@ -160,20 +155,11 @@ export default function BlackjackAreaModal({
             game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]
           ) {
             // Your two cards must have the same value to split
-            if (
-              cardValue(
-                game.hands[game.players.indexOf(coveyTownController.ourPlayer.id)][0][0],
-              ) ===
-              cardValue(game.hands[game.players.indexOf(coveyTownController.ourPlayer.id)][0][1])
-            ) {
+            if (cardValue(currPlayerHands[0][0]) === cardValue(currPlayerHands[0][1])) {
               setCannotSplit(false);
             }
             // Your hand value must be between 9-11 to double
-            if (
-              handValue(game.hands[game.players.indexOf(coveyTownController.ourPlayer.id)][0]) >=
-                9 &&
-              handValue(game.hands[game.players.indexOf(coveyTownController.ourPlayer.id)][0]) <= 11
-            ) {
+            if (handValue(currPlayerHands[0]) >= 9 && handValue(currPlayerHands[0]) <= 11) {
               setCannotDouble(false);
             }
           }
@@ -204,6 +190,12 @@ export default function BlackjackAreaModal({
     close();
   }, [coveyTownController, close]);
 
+  /**
+   * Use to create a card component
+   * @param suit suit of the card
+   * @param value value of the card [A-K]
+   * @returns a HTML card component
+   */
   function createCard(suit: string, value: string) {
     let suitConversion;
 
@@ -252,6 +244,12 @@ export default function BlackjackAreaModal({
     }
   }
 
+  /**
+   * Use to update the game model
+   * @param index index of the actions
+   * @param player player of the action, DEALER for DealerMoves
+   * @param action action of the player or dealer
+   */
   function updateGameModel(index: number, player: string, action: string) {
     const a: GameAction = {
       index: index,
@@ -261,6 +259,12 @@ export default function BlackjackAreaModal({
     blackjackAreaController.gameAction = a;
   }
 
+  /**
+   * Returns the card with a transition
+   * @param suit suit of the card
+   * @param value value of the card [A-K]
+   * @returns a card component with a transition
+   */
   function printCard(value: string, suit: string) {
     return (
       <SlideFade in={isOpen} offsetX={'100px'}>
@@ -269,6 +273,13 @@ export default function BlackjackAreaModal({
     );
   }
 
+  /**
+   * Displayer a player's name, cards, total, and if it is their turn
+   * @param player player's ID
+   * @param cards the player's current hand(s)
+   * @param row the row the player should appear on
+   * @returns a component with the above displayed
+   */
   function playerRow(player: string, cards: Card[], row: number) {
     let nameColor = 'black';
     if (coveyTownController.ourPlayer.id === player) {
@@ -304,6 +315,13 @@ export default function BlackjackAreaModal({
     );
   }
 
+  /**
+   * Displayer a player's name, cards, total, and if it is their turn for splis
+   * @param player player's ID
+   * @param cards the player's current hand(s)
+   * @param row the row the player should appear on
+   * @returns a component with the above displayed
+   */
   function playerRowSplit(player: string, hands: Card[][], row: number) {
     const handOne = hands[0];
     const handTwo = hands[1];
@@ -338,6 +356,11 @@ export default function BlackjackAreaModal({
     );
   }
 
+  /**
+   * Displayer a dealer, its cards, and card total
+   * @param cards the dealer's current hand(s)
+   * @returns a component with the above displayed
+   */
   function dealer(cards: Card[]) {
     const faceUpCards = cards.filter(card => card.isFaceUp);
     const faceDownCards = cards.filter(card => !card.isFaceUp);
@@ -361,6 +384,12 @@ export default function BlackjackAreaModal({
     );
   }
 
+  /**
+   * Display all player hands
+   * @param players All players in game
+   * @param hands All players hands
+   * @returns Grid with players hands
+   */
   function allHands(players: string[], hands: Card[][][]) {
     return (
       <Grid h='200px' templateRows='repeat(31, 1fr)' templateColumns='repeat(10, 1fr)' gap={4}>
@@ -387,6 +416,12 @@ export default function BlackjackAreaModal({
     );
   }
 
+  /**
+   * Current wager value or wager slider
+   * @param minPoints min number of points for that player
+   * @param maxPoints max number of points for the player
+   * @returns Current wager value or wager slider
+   */
   function outputWager(minPoints: number, maxPoints: number) {
     return (
       <HStack>
@@ -436,6 +471,11 @@ export default function BlackjackAreaModal({
     );
   }
 
+  /**
+   * Output of the player's wager
+   * @param points player's current wager
+   * @returns Output of the player's wager
+   */
   function wager(points: number) {
     if (
       game.isStarted &&
@@ -446,6 +486,10 @@ export default function BlackjackAreaModal({
     }
   }
 
+  /**
+   * Output of the results if available
+   * @returns Output of the results if available
+   */
   function results() {
     if (game.results.length !== 0 && playerInGame(coveyTownController.ourPlayer.id)) {
       if (game.results[game.players.indexOf(coveyTownController.ourPlayer.id)].length == 2) {
@@ -468,6 +512,11 @@ export default function BlackjackAreaModal({
     }
   }
 
+  /**
+   * Outputs lobby name with correct styling
+   * @param name name of the player
+   * @returns Outputs lobby name with correct styling
+   */
   function lobby(name: string) {
     return (
       <Text fontSize={'30px'} align={'center'} fontFamily={'Sans Serif'} color={'#d4af37'}>
@@ -476,6 +525,12 @@ export default function BlackjackAreaModal({
     );
   }
 
+  /**
+   * Outputs leaderboard name with correct styling
+   * @param name name of the player
+   * @param points player points
+   * @returns Outputs leaderboard name with correct styling
+   */
   function leaderboardText(name: string, points: number | undefined) {
     return (
       <Text fontSize={'30px'} align={'center'} fontFamily={'Sans Serif'} color={'#d4af37'}>
@@ -484,6 +539,10 @@ export default function BlackjackAreaModal({
     );
   }
 
+  /**
+   * Historical Leaderboard
+   * @returns historical leaderboard
+   */
   function historicalLeaderboard() {
     const historicalLeaders = coveyTownController.blackjackHistoricalLeaders;
 
@@ -532,7 +591,7 @@ export default function BlackjackAreaModal({
           <Tooltip
             label='Basic Rules: Your goal in blackjack is to beat the dealer’s hand without going over 21. 
 You’ll receive 2 cards at the beginning of each round, and you’ll add up the values of these cards. 
-Cards 2-10 have face value; King, Queen, Jack are worth 10; and Aces are either a 1 or an 11 — it’s up to you to decide.
+Cards 2-10 have face value; King, Queen, Jack are worth 10; and Aces are either a 1 or an 11
 The dealer also draws two cards. The aim of the game is to beat his hand (have a higher hand) without going over 21.'>
             <Text className={'text-style'} color={'#d4af37'} fontSize={'85px'}>
               Blackjack Area

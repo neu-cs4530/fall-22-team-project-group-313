@@ -12,6 +12,9 @@ export enum BlackjackMove {
   Join = 'Join',
 }
 
+/**
+ * Represents all of the possible moves a blackjack dealer can make
+ */
 export enum DealerMove {
   StartGame = 'StartGame',
   EndGame = 'EndGame',
@@ -37,7 +40,7 @@ export default class BlackjackGame {
   // Players' hands
   private _hands: Map<string, Card[][]>;
 
-  // index of the hand the player is working with (0 unless player splits)
+  // Index of the hand the player is working with (0 unless player splits)
   private _currentHandIndex: Map<string, number>;
 
   // Bets players have on each hand
@@ -49,12 +52,13 @@ export default class BlackjackGame {
   // Number of decks to be used in the game
   private readonly _numDecks: number;
 
+  // Players playing in the blackjack game
   private _players: string[];
 
   // Queue to join next round
   private _newPlayers: string[];
 
-  // if the game should shuffle the deck upon resetting
+  // If the game should shuffle the deck upon resetting
   private _shouldShuffle: boolean;
 
   // Index of player to move
@@ -63,7 +67,7 @@ export default class BlackjackGame {
   // Player balances
   private _playerPoints: Map<string, number>;
 
-  // is the game in progress?
+  // Is the game in progress?
   private _gameInProgress = false;
 
   // Results of the last round
@@ -133,10 +137,6 @@ export default class BlackjackGame {
     }
   }
 
-  /**
-   * Resets the game cards and deals hands again
-   * @param shuffle if the game should be shuffled or not
-   */
   private _resetGame(shuffle?: boolean) {
     this._initializeDeck(shuffle ?? true);
     this._players.push(...this._newPlayers);
@@ -179,7 +179,7 @@ export default class BlackjackGame {
   }
 
   /**
-   * Performs a move in this game.
+   * Performs a player move in this game.
    * @param playerID The ID of the player making a move
    * @param move the Blackjack move the player chooses
    */
@@ -214,7 +214,6 @@ export default class BlackjackGame {
         if (currentHandVal > 11 || currentHandVal < 9) {
           throw new Error('Hand value must be between 9 and 11!');
         }
-        // TODO: Throw error if value is not 9-11
         const nextCard = this._deck.pop() as Card;
         nextCard.isFaceUp = false;
         currentHand.push(nextCard);
@@ -229,7 +228,6 @@ export default class BlackjackGame {
         if (initHand[0].value !== initHand[1].value) {
           throw new Error("Player's card values do not match!");
         }
-        // TODO: Test splitting not duplicating card
         const secondHand = [initHand[1]];
         playerHands[currentHandIndex].splice(1, 1);
         playerHands.push(secondHand);
@@ -337,6 +335,10 @@ export default class BlackjackGame {
     this._results.delete(playerID);
   }
 
+  /**
+   * Performs a dealer move in this game.
+   * @param move the Blackjack move that the dealer is making
+   */
   public dealerAction(move: DealerMove) {
     switch (move) {
       case DealerMove.StartGame: {
@@ -344,7 +346,6 @@ export default class BlackjackGame {
         break;
       }
       case DealerMove.EndGame: {
-        // TODO: End game
         this._players.forEach(playerID => {
           this._hands.delete(playerID);
           this._currentHandIndex.delete(playerID);
@@ -379,11 +380,9 @@ export default class BlackjackGame {
     while (val < 17) {
       const nextCard = this._deck.pop() as Card;
       this._dealerHand.push(nextCard);
-      // val += nextCard.value === 11 && val < 11 ? 11 : nextCard.value;
       val = +this._handValues('dealer');
     }
     this._handleBets();
-    // this.gameInProgress = false;
   }
 
   private _handValues(playerID: string): number[] {
@@ -420,10 +419,6 @@ export default class BlackjackGame {
     if (bet < 0) {
       throw new Error('Bet must be positive!');
     }
-    // const maxBet = (this.playerPoints.get(playerID) as number) / 2;
-    // if (bet > maxBet) {
-    //   throw new Error('Bet must not be greater than half the current points!');
-    // }
     this._handsAwaitingBet.set(playerID, undefined);
     const currentBets = this._playerBets.get(playerID) as number[];
     currentBets[awaitingBet as number] = bet;
@@ -433,7 +428,6 @@ export default class BlackjackGame {
   // Once the game is over, distributes the points accordingly
   // Currently doesn't do anything with the dealer's points
   private _handleBets(): void {
-    // TODO: Test blackjack
     const dealerHandVal = this._handValues('dealer')[0];
     this._players.forEach(id => {
       const handVals = this._handValues(id);
@@ -446,17 +440,14 @@ export default class BlackjackGame {
           (this.hands.get(id) as Card[][])[index].length === 2 &&
           dealerHandVal !== 21
         ) {
-          // TODO: Blackjack
           results.push('won');
           bets[index] *= 1.5;
           points += bets[index];
         } else if (val > 21 || (val < dealerHandVal && dealerHandVal <= 21)) {
-          // TODO: lose
           points -= bets[index];
           results.push('lost');
         } else if (val > dealerHandVal || dealerHandVal > 21) {
-          // TODO: win
-          points += bets[index]; // TODO: Check if blackjack
+          points += bets[index];
           results.push('won');
         } else {
           results.push('pushed');
@@ -467,6 +458,11 @@ export default class BlackjackGame {
     });
   }
 
+  /**
+   * Converts this Blackjack Game instance to a simple BlackjackGameModel suitable for
+   * transporting over a socket to a client.
+   * @returns
+   */
   public toModel() {
     const game = {
       hands: Array.from(this.hands.values()),

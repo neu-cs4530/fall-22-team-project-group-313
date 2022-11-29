@@ -20,7 +20,7 @@ export default class BlackjackArea extends Interactable {
       this.x - this.displayWidth / 2,
       this.y - this.displayHeight / 2,
       this.playMessage() + this.leaderboard(),
-      { color: '#FFFFFF', backgroundColor: '#000000' },
+      { color: '#FFFFFF', backgroundColor: 'transparent' },
     );
     this._labelText.setVisible(false);
     //this.townController.getBlackjackAreaController(this);
@@ -118,6 +118,7 @@ export default class BlackjackArea extends Interactable {
       { color: '#FFFFFF', backgroundColor: '#000000' },
     );
     this._labelText.setVisible(false);
+    this._labelText.setAlpha(0.75);
     this._labelText.setX(location.x);
     this._labelText.setY(location.y);
     this._labelText.setDepth(100);

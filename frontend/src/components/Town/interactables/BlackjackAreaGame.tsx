@@ -14,7 +14,7 @@ import BlackjackAreaInteractable from './BlackjackArea';
 import BlackjackAreaModal from './BlackjackAreaModal';
 
 /**
- * The ViewingArea monitors the player's interaction with a ViewingArea on the map: displaying either
+ * The BlackjackArea monitors the player's interaction with a BlackjackArea on the map: displaying either
  * a popup to set the video for a viewing area, or if the video is set, a video player.
  *
  * @param props: the viewing area interactable that is being interacted with
@@ -60,8 +60,8 @@ export function BlackjackArea({
 }
 
 /**
- * The ViewingAreaWrapper is suitable to be *always* rendered inside of a town, and
- * will activate only if the player begins interacting with a viewing area.
+ * The BlackjackAreaWrapper is suitable to be *always* rendered inside of a town, and
+ * will activate only if the player begins interacting with a blackjack area.
  */
 export default function BlackjackAreaWrapper(): JSX.Element {
   const blackjackArea = useInteractable<BlackjackAreaInteractable>('blackjackArea');

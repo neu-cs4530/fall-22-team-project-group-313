@@ -539,7 +539,7 @@ The dealer also draws two cards. The aim of the game is to beat his hand (have a
             </Text>
           </Tooltip>
         </ModalHeader>
-        <ModalCloseButton hidden={game.isStarted && game.results[0]?.length === 0} />
+        <ModalCloseButton />
         <ModalBody hidden={game.isStarted} pb={6}>
           <Flex marginTop={'60px'}>
             <Box flex='1'>
@@ -601,19 +601,21 @@ The dealer also draws two cards. The aim of the game is to beat his hand (have a
           </Tooltip>
           <HStack hidden={game.results[0]?.length == 0}>
             {results()}
-            <Button
-              onClick={() => {
-                updateGameModel(
-                  blackjackAreaController.gameAction == undefined
-                    ? 0
-                    : blackjackAreaController.gameAction.index + 1,
-                  'DEALER',
-                  'EndGame',
-                );
-                coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
-              }}>
-              Click to start a new hand
-            </Button>
+            <Tooltip label='Clicking this will add players from the lobby queue to the game.'>
+              <Button
+                onClick={() => {
+                  updateGameModel(
+                    blackjackAreaController.gameAction == undefined
+                      ? 0
+                      : blackjackAreaController.gameAction.index + 1,
+                    'DEALER',
+                    'EndGame',
+                  );
+                  coveyTownController.emitBlackjackAreaUpdate(blackjackAreaController);
+                }}>
+                Click to start a new hand
+              </Button>
+            </Tooltip>
           </HStack>
           {wager(game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)])}
           <HStack hidden={game.playerMoveID !== coveyTownController.ourPlayer.id} spacing={8}>

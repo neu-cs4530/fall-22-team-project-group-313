@@ -20,11 +20,11 @@ describe('BlackjackGame', () => {
     testGame = new BlackjackGame();
     testGame.addPlayer(playerOne.id);
     testGame.dealerAction(DealerMove.StartGame);
-    testGame.playerMove(playerOne.id, 'Wager:10' as BlackjackMove);
+    testGame.playerMove(playerOne.id, 'Wager:25' as BlackjackMove);
     noShuffleGame = new BlackjackGame(6, false);
     noShuffleGame.addPlayer(playerOne.id);
     noShuffleGame.dealerAction(DealerMove.StartGame);
-    noShuffleGame.playerMove(playerOne.id, 'Wager:10' as BlackjackMove);
+    noShuffleGame.playerMove(playerOne.id, 'Wager:25' as BlackjackMove);
   });
   describe('dealerHand', () => {
     it('No-shuffle dealer hand has consistent result after moving', () => {
@@ -80,10 +80,9 @@ describe('BlackjackGame', () => {
       noShuffleGame.hands.set(playerOne.id, [[card1, card2]]);
       noShuffleGame.playerMove(playerOne.id, BlackjackMove.Split);
       const splitHands = noShuffleGame.hands.get(playerOne.id) as Card[][];
+      expect(splitHands.length).toEqual(2);
       expect(splitHands[0][0]).toEqual(card1);
-      expect(splitHands[0].length).toEqual(1);
       expect(splitHands[1][0]).toEqual(card2);
-      expect(splitHands[1].length).toEqual(1);
     });
     it('Split, Splitting when values do not match throws error', () => {
       const card1 = new Card(Suit.C, '10');
@@ -96,6 +95,16 @@ describe('BlackjackGame', () => {
     });
     it('Double, doubling throws an error when hand val not between 9 and 11', () => {
       expect(() => noShuffleGame.playerMove(playerOne.id, BlackjackMove.Double)).toThrowError();
+    });
+  });
+  describe('playerBets', () => {
+    it('Blackjack returns 1.5x the bet', () => {
+      const card1 = new Card(Suit.C, '10');
+      const card2 = new Card(Suit.H, 'A');
+      noShuffleGame.hands.set(playerOne.id, [[card1, card2]]);
+      noShuffleGame.playerMove(playerOne.id, BlackjackMove.Stay);
+      const model = noShuffleGame.toModel();
+      expect(model.playerPoints[0]).toEqual(137.5);
     });
   });
   describe('dealerAction', () => {

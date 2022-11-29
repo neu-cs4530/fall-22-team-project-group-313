@@ -10,11 +10,13 @@ import {
 import InteractableArea from './InteractableArea';
 
 export default class BlackjackArea extends InteractableArea {
-  /* The number of decks set in the blackjack area, or undefined if it is not set */
+  /* The current action taken in the blackjack area (Can be a player or dealer action) */
   public gameAction?: GameAction;
 
+  /* The blackjack game */
   public game: BlackjackGame;
 
+  /* The occupants in the blackjack area (Includes both players and the queue) */
   public gameOccupantsByID: string[] = [];
 
   /** The blackjack area is "active" when there are players inside of it  */

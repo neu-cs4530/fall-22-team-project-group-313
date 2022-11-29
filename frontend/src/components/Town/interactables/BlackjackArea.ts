@@ -1,5 +1,6 @@
 import Interactable, { KnownInteractableTypes } from '../Interactable';
 
+/** A class representing the frontend of a blackjack area */
 export default class BlackjackArea extends Interactable {
   private _labelText?: Phaser.GameObjects.Text;
 
@@ -23,10 +24,10 @@ export default class BlackjackArea extends Interactable {
       { color: '#FFFFFF', backgroundColor: '#000000' },
     );
     this._labelText.setVisible(false);
-    //this.townController.getBlackjackAreaController(this);
     this.setDepth(-1);
   }
 
+  /** Displays a message depneding on if the game is full or not */
   playMessage(): string {
     let output = '';
     const bjController = this.townController.getBlackjackAreaController(this);
@@ -40,16 +41,15 @@ export default class BlackjackArea extends Interactable {
     return output;
   }
 
+  /** Creates a string representation of the current and historical leaderboard */
   leaderboard(): string {
     const currentLeaders = new Map();
 
     let output = 'Current Blackjack Leaders:\n';
 
-    // Get blackjack controller
     const bjController = this.townController.getBlackjackAreaController(this);
 
     // Get the current leaders dictionary from blackjack controller
-    // game.playerPoints[game.players.indexOf(coveyTownController.ourPlayer.id)]
     if (bjController.game.isStarted) {
       bjController.game.players.forEach(playerID =>
         currentLeaders.set(
@@ -60,16 +60,14 @@ export default class BlackjackArea extends Interactable {
         ),
       );
     }
-    // Get the historical leaders dictionary from townController
 
-    // Sort leaders dictionary
     const currentLeadersSorted = new Map([...currentLeaders.entries()].sort((a, b) => b[1] - a[1]));
 
     if (!currentLeadersSorted || !bjController.game.isStarted) {
       output += 'No current players in this area.\n';
     }
 
-    // Iterate through dictionary
+    // Adds current leaderboard string
     let i = 1;
     let jsd = 1;
     for (const item of currentLeadersSorted) {
@@ -84,7 +82,6 @@ export default class BlackjackArea extends Interactable {
 
     const historicalLeaders = this.townController.blackjackHistoricalLeaders;
 
-    // Sort leaders dictionary
     const historicalLeadersSorted = new Map(
       [...historicalLeaders.entries()].sort((a, b) => b[1] - a[1]),
     );
@@ -93,7 +90,7 @@ export default class BlackjackArea extends Interactable {
       output += 'No historical leaders in this town.';
     }
 
-    // Iterate through dictionary
+    // Adds historical leaderboard string
     i = 1;
     jsd = 1;
     for (const item of historicalLeadersSorted) {

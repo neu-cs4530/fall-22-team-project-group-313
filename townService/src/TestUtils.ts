@@ -13,11 +13,13 @@ import {
 import Player from './lib/Player';
 import {
   BlackjackArea,
+  BlackjackGame,
   BoundingBox,
   ClientToServerEvents,
   ConversationArea,
   CoveyTownSocket,
   Direction,
+  GameAction,
   Interactable,
   PlayerLocation,
   ServerToClientEvents,
@@ -39,6 +41,41 @@ export function createConversationForTesting(params?: {
     id: params?.conversationID || nanoid(),
     occupantsByID: [],
     topic: params?.conversationTopic || nanoid(),
+  };
+}
+
+/**
+ * Create a new blackjack area using some random defaults
+ * @param params
+ * @returns
+ */
+export function createBlackjackForTesting(params?: {
+  blackjackID?: string;
+  blackjackGameAction?: GameAction;
+  blackjackGame?: BlackjackGame;
+  boundingBox?: BoundingBox;
+}): BlackjackArea {
+  const newGame: BlackjackGame = {
+    hands: [],
+    playerPoints: [],
+    playerBets: [],
+    playerMoveID: '',
+    players: [],
+    queue: [],
+    isStarted: false,
+    dealerHand: [],
+    results: [],
+  };
+  return {
+    id: params?.blackjackID || nanoid(),
+    occupantsByID: [],
+    gameOccupantsByID: [],
+    game: params?.blackjackGame || newGame,
+    gameAction: params?.blackjackGameAction || {
+      GameAction: 'gameStart',
+      playerID: '-1',
+      index: -1,
+    },
   };
 }
 

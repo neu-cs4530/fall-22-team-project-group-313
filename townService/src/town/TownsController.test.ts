@@ -2,7 +2,13 @@ import assert from 'assert';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
 import { Town } from '../api/Model';
-import { ConversationArea, Interactable, TownEmitter, ViewingArea } from '../types/CoveyTownSocket';
+import {
+  BlackjackArea,
+  ConversationArea,
+  Interactable,
+  TownEmitter,
+  ViewingArea,
+} from '../types/CoveyTownSocket';
 import TownsStore from '../lib/TownsStore';
 import {
   createConversationForTesting,
@@ -12,6 +18,7 @@ import {
   isViewingArea,
   isConversationArea,
   MockedPlayer,
+  createBlackjackForTesting,
 } from '../TestUtils';
 import { TownsController } from './TownsController';
 
@@ -250,6 +257,28 @@ describe('TownsController integration tests', () => {
       expect(createdArea.topic).toEqual(conversationArea.topic);
       expect(initialData2.interactables.length).toEqual(initialData.interactables.length);
     });
+    it('Includes active blackjack areas in the initial join data', async () => {
+      const town = await createTownForTesting(undefined, true);
+      const player = mockPlayer(town.townID);
+      await controller.joinTown(player.socket);
+      const initialData = getLastEmittedEvent(player.socket, 'initialize');
+      const blackjackArea = createBlackjackForTesting({
+        boundingBox: { x: 10, y: 10, width: 1, height: 1 },
+        blackjackID: initialData.interactables.find(
+          eachInteractable => 'occupantsByID' in eachInteractable,
+        )?.id,
+      });
+      await controller.createBlackjackArea(town.townID, extractSessionToken(player), blackjackArea);
+
+      const player2 = mockPlayer(town.townID);
+      await controller.joinTown(player2.socket);
+      const initialData2 = getLastEmittedEvent(player2.socket, 'initialize');
+      const createdArea = initialData2.interactables.find(
+        eachInteractable => eachInteractable.id === blackjackArea.id,
+      ) as BlackjackArea;
+      expect(createdArea.id).toEqual(blackjackArea.id);
+      expect(initialData2.interactables.length).toEqual(initialData.interactables.length);
+    });
   });
   describe('Interactables', () => {
     let testingTown: TestTownData;
@@ -353,6 +382,38 @@ describe('TownsController integration tests', () => {
         viewingArea.id = nanoid();
         await expect(
           controller.createViewingArea(testingTown.townID, sessionToken, viewingArea),
+        ).rejects.toThrow();
+      });
+    });
+
+    describe('Create Blackjack Area', () => {
+      it('Executes without error when creating a new blackjack', async () => {
+        await controller.createBlackjackArea(
+          testingTown.townID,
+          sessionToken,
+          createBlackjackForTesting({
+            blackjackID: interactables.find(eachInteractable => 'occupantsByID' in eachInteractable)
+              ?.id,
+          }),
+        );
+      });
+      it('Returns an error message if the town ID is invalid', async () => {
+        await expect(
+          controller.createBlackjackArea(nanoid(), sessionToken, createBlackjackForTesting()),
+        ).rejects.toThrow();
+      });
+      it('Checks for a valid session token before creating a blackjack area', async () => {
+        const blackjackArea = createBlackjackForTesting();
+        const invalidSessionToken = nanoid();
+
+        await expect(
+          controller.createBlackjackArea(testingTown.townID, invalidSessionToken, blackjackArea),
+        ).rejects.toThrow();
+      });
+      it('Returns an error message if addBlackjack returns false', async () => {
+        const blackjackArea = createBlackjackForTesting();
+        await expect(
+          controller.createConversationArea(testingTown.townID, sessionToken, blackjackArea),
         ).rejects.toThrow();
       });
     });

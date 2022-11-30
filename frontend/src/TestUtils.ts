@@ -1,12 +1,18 @@
 import { ReservedOrUserListener } from '@socket.io/component-emitter';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
+import BlackjackAreaController from './classes/BlackjackAreaController';
 import ConversationAreaController from './classes/ConversationAreaController';
 import PlayerController from './classes/PlayerController';
 import TownController, { TownEvents } from './classes/TownController';
 import ViewingAreaController from './classes/ViewingAreaController';
 import { TownsService } from './generated/client';
-import { CoveyTownSocket, ServerToClientEvents, TownJoinResponse } from './types/CoveyTownSocket';
+import {
+  BlackjackGame,
+  CoveyTownSocket,
+  ServerToClientEvents,
+  TownJoinResponse,
+} from './types/CoveyTownSocket';
 
 //These types copied from socket.io server library so that we don't have to depend on the whole thing to have type-safe tests.
 type SocketReservedEventsMap = {
@@ -85,6 +91,7 @@ type MockedTownControllerProperties = {
   players?: PlayerController[];
   conversationAreas?: ConversationAreaController[];
   viewingAreas?: ViewingAreaController[];
+  blackjackAreas?: BlackjackAreaController[];
 };
 export function mockTownController({
   friendlyName,
@@ -95,6 +102,7 @@ export function mockTownController({
   players,
   conversationAreas,
   viewingAreas,
+  blackjackAreas,
 }: MockedTownControllerProperties) {
   const mockedController = mock<TownController>();
   if (friendlyName) {
@@ -123,6 +131,9 @@ export function mockTownController({
   if (viewingAreas) {
     Object.defineProperty(mockedController, 'viewingAreas', { value: viewingAreas });
   }
+  if (blackjackAreas) {
+    Object.defineProperty(mockedController, 'blackjackAreas', { value: blackjackAreas });
+  }
   return mockedController;
 }
 
@@ -145,6 +156,17 @@ export async function mockTownControllerConnection(
     responseToSendController = townJoinResponse;
   } else {
     const ourUserID = nanoid();
+    const blackjackGame: BlackjackGame = {
+      hands: [],
+      playerPoints: [],
+      playerBets: [],
+      playerMoveID: '',
+      players: [],
+      queue: [],
+      isStarted: false,
+      dealerHand: [],
+      results: [],
+    };
     responseToSendController = {
       interactables: [],
       currentPlayers: [
@@ -165,6 +187,13 @@ export async function mockTownControllerConnection(
       topic: undefined,
       occupantsByID: [],
     });
+    responseToSendController.interactables.push({
+      id: nanoid(),
+      occupantsByID: [],
+      gameOccupantsByID: [],
+      game: blackjackGame,
+      gameAction: { GameAction: 'gameStart', playerID: '-1', index: -1 },
+    });
     for (let i = 0; i < 10; i++) {
       const playerID = nanoid();
       responseToSendController.currentPlayers.push({
@@ -182,6 +211,13 @@ export async function mockTownControllerConnection(
         video: nanoid(),
         elapsedTimeSec: 0,
         isPlaying: false,
+      });
+      responseToSendController.interactables.push({
+        id: nanoid(),
+        occupantsByID: [],
+        gameOccupantsByID: [],
+        game: blackjackGame,
+        gameAction: { GameAction: 'gameStart', playerID: '-1', index: -1 },
       });
     }
   }

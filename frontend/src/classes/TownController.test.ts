@@ -9,6 +9,8 @@ import {
   ReceivedEventParameter,
 } from '../TestUtils';
 import {
+  BlackjackArea as BlackjackModel,
+  BlackjackGame,
   ChatMessage,
   ConversationArea as ConversationAreaModel,
   CoveyTownSocket,
@@ -17,7 +19,8 @@ import {
   ServerToClientEvents,
   TownJoinResponse,
 } from '../types/CoveyTownSocket';
-import { isConversationArea, isViewingArea } from '../types/TypeUtils';
+import { isBlackjackArea, isConversationArea, isViewingArea } from '../types/TypeUtils';
+import BlackjackAreaController from './BlackjackAreaController';
 import PlayerController from './PlayerController';
 import TownController, { TownEvents } from './TownController';
 import ViewingAreaController from './ViewingAreaController';
@@ -182,27 +185,27 @@ describe('TownController', () => {
         fail('Did not find an existing, empty conversation area in the town join response');
       }
     });
-    // it('Emits blackjackAreasChanged when a blackjack area is created', () => {
-    //   const newBlackjackArea = townJoinResponse.interactables.find(
-    //     eachInteractable => isBlackjackArea(eachInteractable) && !eachInteractable.gameAction,
-    //   ) as BlackjackModel;
-    //   if (newBlackjackArea) {
-    //     newBlackjackArea.gameAction = { GameAction: 'test', playerID: 'testID' };
-    //     newBlackjackArea.occupantsByID = [townJoinResponse.userID];
-    //     const event = emitEventAndExpectListenerFiring(
-    //       'interactableUpdate',
-    //       newBlackjackArea,
-    //       'blackjackAreasChanged',
-    //     );
-    //     const changedAreasArray = event.mock.calls[0][0];
-    //     expect(
-    //       changedAreasArray.find(eachBlackjackArea => eachBlackjackArea.id === newBlackjackArea.id)
-    //         ?.gameAction,
-    //     );
-    //   } else {
-    //     fail('Did not find an existing, empty blackjack area in the town join response');
-    //   }
-    // });
+    it('Emits blackjackAreasChanged when a blackjack area is created', () => {
+      const newBlackjackArea = townJoinResponse.interactables.find(eachInteractable =>
+        isBlackjackArea(eachInteractable),
+      ) as BlackjackModel;
+      if (newBlackjackArea) {
+        newBlackjackArea.gameAction = { GameAction: 'gameStart', playerID: '-1', index: -1 };
+        newBlackjackArea.occupantsByID = [townJoinResponse.userID];
+        const event = emitEventAndExpectListenerFiring(
+          'interactableUpdate',
+          newBlackjackArea,
+          'blackjackAreasChanged',
+        );
+        const changedAreasArray = event.mock.calls[0][0];
+        expect(
+          changedAreasArray.find(eachBlackjackArea => eachBlackjackArea.id === newBlackjackArea.id)
+            ?.gameAction,
+        );
+      } else {
+        fail('Did not find an existing, empty blackjack area in the town join response');
+      }
+    });
     describe('[T2] interactableUpdate events', () => {
       describe('Conversation Area updates', () => {
         function emptyConversationArea() {
@@ -421,6 +424,90 @@ describe('TownController', () => {
           viewingArea.video = nanoid();
           eventListener(viewingArea);
           expect(listener).toBeCalledWith(viewingArea.video);
+        });
+      });
+      describe('Blackjack Area updates', () => {
+        function blackjackAreaOnTown() {
+          return {
+            ...(townJoinResponse.interactables.find(eachInteractable =>
+              isBlackjackArea(eachInteractable),
+            ) as BlackjackModel),
+          };
+        }
+        let blackjackArea: BlackjackModel;
+        let blackjackAreaController: BlackjackAreaController;
+        let eventListener: (update: BlackjackModel) => void;
+        beforeEach(() => {
+          blackjackArea = blackjackAreaOnTown();
+          const controller = testController.blackjackAreas.find(
+            eachArea => eachArea.id === blackjackArea.id,
+          );
+          if (!controller) {
+            fail(`Could not find blackjack area controller for blackjack area ${blackjackArea.id}`);
+          }
+          blackjackAreaController = controller;
+          eventListener = getEventListener(mockSocket, 'interactableUpdate');
+        });
+        it('Updates the blackjack area model', () => {
+          blackjackArea.gameAction = { GameAction: 'hit', playerID: '-1', index: -1 };
+
+          eventListener(blackjackArea);
+
+          expect(blackjackAreaController.toBlackjackModel()).toEqual(blackjackArea);
+        });
+        it('Emits a gameActionChange event if gameAction changes', () => {
+          const listener = jest.fn();
+          blackjackAreaController.addListener('gameActionChange', listener);
+
+          blackjackArea.gameAction = { GameAction: 'stay', playerID: '-1', index: -1 };
+          eventListener(blackjackArea);
+          expect(listener).toBeCalledWith(blackjackArea.gameAction);
+        });
+        it('Emits a gameChange event if the game changes', () => {
+          const listener = jest.fn();
+          blackjackAreaController.addListener('gameChange', listener);
+          const testGame: BlackjackGame = {
+            hands: [],
+            playerPoints: [],
+            playerBets: [],
+            playerMoveID: '',
+            players: [],
+            queue: ['Sean'],
+            isStarted: true,
+            dealerHand: [],
+            results: [],
+          };
+          blackjackArea.game = testGame;
+          eventListener(blackjackArea);
+          expect(listener).toBeCalledWith(blackjackArea.game);
+        });
+        it('Emits a blackjackAreasChanged event with the updated list of blackjack areas if the area is newly occupied', () => {
+          const bjArea = blackjackAreaOnTown();
+          bjArea.occupantsByID = [townJoinResponse.userID];
+          bjArea.gameAction = { GameAction: 'stay', playerID: '-1', index: -1 };
+          const updatedBlackjackAreas = testController.blackjackAreas;
+
+          emitEventAndExpectListenerFiring(
+            'interactableUpdate',
+            bjArea,
+            'blackjackAreasChanged',
+            updatedBlackjackAreas,
+          );
+
+          const updatedController = updatedBlackjackAreas.find(
+            eachArea => eachArea.id === bjArea.id,
+          );
+          expect(updatedController?.gameAction).toEqual(bjArea.gameAction);
+          expect(updatedController?.occupants.map(eachOccupant => eachOccupant.id)).toEqual(
+            bjArea.occupantsByID,
+          );
+          expect(updatedController?.toBlackjackModel()).toEqual({
+            id: bjArea.id,
+            gameAction: bjArea.gameAction,
+            occupantsByID: [townJoinResponse.userID],
+            gameOccupantsByID: [],
+            game: bjArea.game,
+          });
         });
       });
     });
